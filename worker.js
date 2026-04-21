@@ -198,7 +198,36 @@ export default {
                 return handleUpdateSeason(parseInt(seasonPatch[1]), request, env);
             }
 
-            // ── Discord webhook proxy ────────────────────────────
+            // ── Discord Integration ─────────────────────────────
+            if (path === '/api/discord/webhook') {
+                if (method === 'GET') {
+                    const deny = requireAdmin(request, env);
+                    if (deny) return deny;
+                    return handleGetDiscordWebhook(env);
+                }
+            }
+            if (method === 'POST' && path === '/api/discord/settings') {
+                const deny = requireAdmin(request, env);
+                if (deny) return deny;
+                return handleUpdateDiscordSettings(request, env);
+            }
+            if (method === 'POST' && path === '/api/discord/test') {
+                const deny = requireAdmin(request, env);
+                if (deny) return deny;
+                return handleDiscordTest(env);
+            }
+            if (method === 'POST' && path === '/api/discord/welcome') {
+                const deny = requireAdmin(request, env);
+                if (deny) return deny;
+                return handleDiscordWelcome(env);
+            }
+            if (method === 'POST' && path === '/api/discord/leaderboard') {
+                const deny = requireAdmin(request, env);
+                if (deny) return deny;
+                return handleDiscordLeaderboard(request, env);
+            }
+
+            // Legacy proxy route
             if (method === 'POST' && path === '/api/discord-webhook') {
                 return handleDiscordWebhook(request, env);
             }
@@ -607,7 +636,9 @@ const ACHIEVEMENT_ICONS = {
 
 /* Low-level: POST any payload to the Discord webhook */
 async function postToDiscord(env, payload) {
-    const url = env.DISCORD_WEBHOOK_URL;
+    const url = await env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('discord_webhook_url').first()
+                .then(r => r?.value || env.DISCORD_WEBHOOK_URL);
+
     if (!url) { console.warn('DISCORD_WEBHOOK_URL not set — skipping'); return; }
     const res = await fetch(url, {
         method:  'POST',
@@ -709,4 +740,105 @@ async function fireSeasonStartNotification(env, season, players) {
         : '🔔 A new Diablo IV Hall of Legends season has started!';
 
     await postToDiscord(env, { content, username: 'Hall of Legends', embeds: [embed] });
+}
+
+// ════════════════════════════════════════════════════════════════
+// DISCORD ADMIN HANDLERS
+// ════════════════════════════════════════════════════════════════
+
+async function handleGetDiscordWebhook(env) {
+    const row = await env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('discord_webhook_url').first();
+    const url = row?.value || env.DISCORD_WEBHOOK_URL || '';
+    return json({ url });
+}
+
+async function handleUpdateDiscordSettings(request, env) {
+    const body = await request.json().catch(() => null);
+    if (!body?.url) return err('URL is required');
+
+    await env.DB.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
+        .bind('discord_webhook_url', body.url).run();
+
+    return json({ success: true });
+}
+
+async function handleDiscordTest(env) {
+    const embed = {
+        title: '📡 System Connection Test',
+        description: 'Successfully connected to the Diablo IV Hall of Legends portal! ✅',
+        color: 0x4ade80,
+        fields: [
+            { name: 'Status', value: 'Online', inline: true },
+            { name: 'Time', value: new Date().toISOString(), inline: true }
+        ],
+        footer: { text: 'Diablo IV — Admin Tools' }
+    };
+    await postToDiscord(env, { username: 'Hall of Legends', embeds: [embed] });
+    return json({ success: true });
+}
+
+async function handleDiscordWelcome(env) {
+    const season = await env.DB.prepare('SELECT * FROM seasons WHERE status = "active" LIMIT 1').first();
+
+    const embed = {
+        title: '🎉 Welcome to the Hall of Legends!',
+        description: 'The definitive platform for tracking our Diablo IV conquests and competitive seasonal achievements.',
+        color: 0xc9a84c,
+        fields: [
+            { name: '🌐 Access the Portal', value: 'https://diablo4-hof-site.pages.dev', inline: false },
+            { name: '🎯 How it Works', value: 'Record your rare drops and achievements. Compete for the top spot on the seasonal and all-time leaderboards!', inline: false },
+            { name: '⚔️ Current Season', value: season ? `**${season.name}** is currently active!` : 'No active season at the moment.', inline: true },
+            { name: '📦 Features', value: '• Bingo Board\n• Live Leaderboards\n• Achievement History\n• Discord Sync', inline: true }
+        ],
+        footer: { text: 'Diablo IV — Built for the Grind' },
+        timestamp: new Date().toISOString()
+    };
+
+    await postToDiscord(env, { username: 'Hall of Legends', embeds: [embed] });
+    return json({ success: true });
+}
+
+async function handleDiscordLeaderboard(request, env) {
+    const body = await request.json().catch(() => null);
+    const seasonSlug = body?.season;
+    if (!seasonSlug) return err('Season slug is required');
+
+    const season = await env.DB.prepare('SELECT * FROM seasons WHERE slug = ?').bind(seasonSlug).first();
+    if (!season) return err('Season not found', 404);
+
+    // Get standings
+    const res = await env.DB.prepare(`
+        SELECT p.name, COALESCE(SUM(a.points), 0) as pts, COUNT(a.id) as achs
+        FROM players p
+        JOIN achievements a ON p.id = a.player_id
+        WHERE a.season = ?
+        GROUP BY p.id
+        ORDER BY pts DESC, achs DESC
+    `).bind(seasonSlug).all();
+
+    const results = res.results || [];
+    if (results.length === 0) {
+        return err('No scores found for this season yet');
+    }
+
+    // Top 3 medals
+    const medals = ['🥇', '🥈', '🥉'];
+    let rankedList = results.map((r, i) => {
+        const medal = medals[i] || `${i + 1}.`;
+        return `${medal} **${r.name}** — ${r.pts} pts (${r.achs} achievements)`;
+    }).join('\n');
+
+    // Limit if too long
+    if (rankedList.length > 2000) rankedList = rankedList.substring(0, 1990) + '...';
+
+    const embed = {
+        title: `🏆 ${season.name} — Current Standings`,
+        description: results.length > 0 ? rankedList : 'No participants yet.',
+        color: 0xc9a84c,
+        footer: { text: `Diablo IV — Hall of Legends • ${season.name}` },
+        timestamp: new Date().toISOString()
+    };
+
+    await postToDiscord(env, { username: 'Hall of Legends', embeds: [embed] });
+    return json({ success: true });
 }

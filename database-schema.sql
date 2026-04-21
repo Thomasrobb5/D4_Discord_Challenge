@@ -39,6 +39,12 @@ CREATE TABLE IF NOT EXISTS achievements (
     FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
 );
 
+-- ── SETTINGS ─────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT
+);
+
 -- ── INDEXES ─────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_ach_player  ON achievements(player_id);
 CREATE INDEX IF NOT EXISTS idx_ach_season  ON achievements(season);

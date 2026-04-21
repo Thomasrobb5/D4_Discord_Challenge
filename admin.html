@@ -192,6 +192,7 @@
         <button class="tab-btn" data-tab="tab-players">👤 Players</button>
         <button class="tab-btn" data-tab="tab-seasons">📅 Seasons</button>
         <button class="tab-btn" data-tab="tab-history">📋 History</button>
+        <button class="tab-btn" data-tab="tab-discord">🔔 Discord</button>
         <button class="tab-btn" data-tab="tab-sql">⚙ Quick SQL</button>
     </div>
 
@@ -484,6 +485,102 @@ FROM achievements ORDER BY timestamp DESC LIMIT 20;</textarea></div>
         </div>
     </div>
 
+    <!-- ─── DISCORD INTEGRATION ─── -->
+    <div class="tab-pane" id="tab-discord">
+
+        <!-- Overview -->
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">🔔</span> Discord Integration</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:0.25rem">
+                <div style="background:rgba(88,101,242,0.07);border:1px solid rgba(88,101,242,0.2);border-radius:8px;padding:1.1rem">
+                    <div style="font-family:'Cinzel',serif;font-size:0.67rem;letter-spacing:0.2em;text-transform:uppercase;color:#7289da;margin-bottom:0.6rem">Auto-fires on these events</div>
+                    <ul style="font-size:0.82rem;color:var(--text-mid);line-height:2;list-style:none">
+                        <li>🏆 &nbsp;Achievement recorded by admin</li>
+                        <li>🎯 &nbsp;Bingo Board self-claim by player</li>
+                        <li>⚔️ &nbsp;Season status set to Active</li>
+                    </ul>
+                </div>
+                <div style="background:rgba(88,101,242,0.07);border:1px solid rgba(88,101,242,0.2);border-radius:8px;padding:1.1rem">
+                    <div style="font-family:'Cinzel',serif;font-size:0.67rem;letter-spacing:0.2em;text-transform:uppercase;color:#7289da;margin-bottom:0.6rem">@mention setup</div>
+                    <p style="font-size:0.8rem;color:var(--text-mid);line-height:1.65">Players are tagged via their <strong style="color:var(--text-bright)">Discord User ID</strong> stored in their profile (Players tab).<br><br><span style="color:var(--text-dim)">Get ID: Discord → Settings → Advanced → Developer Mode → right-click user → Copy User ID</span></p>
+                </div>
+                <div style="background:rgba(88,101,242,0.07);border:1px solid rgba(88,101,242,0.2);border-radius:8px;padding:1.1rem">
+                    <div style="font-family:'Cinzel',serif;font-size:0.67rem;letter-spacing:0.2em;text-transform:uppercase;color:#7289da;margin-bottom:0.6rem">Connection status</div>
+                    <div id="discordStatusBadge" style="font-size:0.88rem;color:var(--text-dim);font-style:italic">Loading…</div>
+                    <div style="margin-top:0.75rem;font-size:0.72rem;color:var(--text-dim)">Active webhook: <span id="discordWebhookLabel" style="color:var(--ash-silver);word-break:break-all">—</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Webhook URL settings -->
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">🔗</span> Webhook Settings</div>
+            <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:1.25rem;line-height:1.6">
+                The webhook URL is stored in the D1 settings table — updating it here takes effect immediately with no redeployment needed.
+            </p>
+            <div class="form-grid">
+                <div class="form-field wide">
+                    <label class="form-label">Discord Webhook URL</label>
+                    <input type="url" class="form-input" id="dc-webhook-url" placeholder="https://discord.com/api/webhooks/…">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">Admin Password</label>
+                    <input type="password" class="form-input" id="dc-webhook-pw" placeholder="Required">
+                </div>
+            </div>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.75rem">
+                <button class="btn btn-primary" onclick="saveWebhookUrl()">💾 Save Webhook URL</button>
+                <button class="btn" style="border-color:rgba(88,101,242,0.4);color:#7289da;background:rgba(88,101,242,0.08)" onclick="testWebhook()">📡 Send Test Ping</button>
+            </div>
+            <div class="status-msg" id="webhookStatus"></div>
+        </div>
+
+        <!-- Manual posts -->
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">📢</span> Manual Discord Posts</div>
+            <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:1.5rem">Send rich formatted posts to your Discord channel on demand.</p>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem">
+
+                <!-- Welcome card -->
+                <div style="background:rgba(7,5,15,0.7);border:1px solid rgba(88,101,242,0.25);border-radius:10px;padding:1.4rem;display:flex;flex-direction:column;gap:0.75rem">
+                    <div style="font-family:'Cinzel',serif;font-size:0.88rem;font-weight:700;color:#7289da">🎉 Welcome Message</div>
+                    <p style="font-size:0.78rem;color:var(--text-dim);line-height:1.65">Posts a welcome embed with the portal overview, the site URL, feature list, and current active season info. Perfect for announcing the platform to your group for the first time.</p>
+                    <div style="background:rgba(88,101,242,0.06);border:1px solid rgba(88,101,242,0.15);border-radius:6px;padding:0.75rem;font-size:0.72rem;color:var(--text-dim)">
+                        Preview includes: site link · current season · leaderboard overview · how to claim achievements
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" style="font-size:0.64rem">Admin Password</label>
+                        <input type="password" class="form-input" id="dc-welcome-pw" placeholder="Required" style="font-size:0.85rem;padding:0.55rem 0.8rem">
+                    </div>
+                    <button class="btn btn-primary" style="justify-content:center;background:rgba(88,101,242,0.2);border-color:rgba(88,101,242,0.5);color:#a5b4fc" onclick="sendWelcomePost()">🎉 Post Welcome Message</button>
+                    <div class="status-msg" id="welcomeStatus"></div>
+                </div>
+
+                <!-- Leaderboard card -->
+                <div style="background:rgba(7,5,15,0.7);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:1.4rem;display:flex;flex-direction:column;gap:0.75rem">
+                    <div style="font-family:'Cinzel',serif;font-size:0.88rem;font-weight:700;color:var(--ember-gold)">🏆 Season Leaderboard Update</div>
+                    <p style="font-size:0.78rem;color:var(--text-dim);line-height:1.65">Posts the current standings for a chosen season — ranked player table with glory points and achievement counts. Great for mid-season hype or end-of-season recap.</p>
+                    <div style="background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:6px;padding:0.75rem;font-size:0.72rem;color:var(--text-dim)">
+                        Preview includes: 🥇🥈🥉 top 3 podium · full ranked table · total points · season name
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" style="font-size:0.64rem">Season</label>
+                        <select class="form-select" id="dc-lb-season" style="font-size:0.85rem;padding:0.55rem 0.8rem"></select>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" style="font-size:0.64rem">Admin Password</label>
+                        <input type="password" class="form-input" id="dc-lb-pw" placeholder="Required" style="font-size:0.85rem;padding:0.55rem 0.8rem">
+                    </div>
+                    <button class="btn btn-primary" style="justify-content:center" onclick="sendLeaderboardPost()">🏆 Post Leaderboard</button>
+                    <div class="status-msg" id="lbPostStatus"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
 </div>
 
 <script>
@@ -566,7 +663,7 @@ function populatePlayers() {
 }
 
 function populateSeasons() {
-    ['ach-season','us-season','setup-season-select'].forEach(id => {
+    ['ach-season','us-season','setup-season-select', 'dc-lb-season'].forEach(id => {
         const sel = $(id); if(!sel) return;
         const cur = sel.value;
         sel.innerHTML = '';
@@ -743,6 +840,10 @@ function setupTabs() {
             btn.classList.add('active');
             const pane = $(btn.dataset.tab);
             if (pane) pane.classList.add('active');
+
+            if (btn.dataset.tab === 'tab-discord') {
+                loadDiscordSettings();
+            }
         });
     });
 }
@@ -1104,6 +1205,120 @@ async function saveSeasonSetup() {
         }
     } catch (e) {
         showStatus('setupStatus','error','Network error: ' + e.message);
+    }
+}
+
+/* ─── DISCORD INTEGRATION LOGIC ─── */
+async function loadDiscordSettings() {
+    const badge = $('discordStatusBadge');
+    const label = $('discordWebhookLabel');
+    try {
+        const res = await fetch(`${API_URL}/discord/webhook`, {
+             headers: { 'X-Admin-Password': $('dc-webhook-pw')?.value || '' } 
+        });
+        if (res.status === 401) {
+             badge.innerHTML = '<span style="color:var(--error-clr)">🔒 Admin Password Required</span>';
+             return;
+        }
+        const data = await res.json();
+        if (data.url) {
+            badge.innerHTML = '<span style="color:var(--success-clr)">📡 Connected</span>';
+            // Mask URL
+            const url = data.url;
+            const masked = url.substring(0, 35) + '...' + url.substring(url.length - 8);
+            label.textContent = masked;
+            if (!$('dc-webhook-url').value) $('dc-webhook-url').value = data.url;
+        } else {
+            badge.innerHTML = '<span style="color:var(--error-clr)">❌ Not Configured</span>';
+            label.textContent = "No webhook found";
+        }
+    } catch {
+        badge.innerHTML = '<span style="color:var(--error-clr)">⚠️ Error checking status</span>';
+    }
+}
+
+async function saveWebhookUrl() {
+    const url = $('dc-webhook-url').value.trim();
+    const pw  = $('dc-webhook-pw').value.trim();
+    if (!url) return showStatus('webhookStatus','error','URL is required');
+    if (!pw)  return showStatus('webhookStatus','error','Admin password is required');
+
+    try {
+        const res = await fetch(`${API_URL}/discord/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Admin-Password': pw },
+            body: JSON.stringify({ url })
+        });
+        if (res.ok) {
+            showStatus('webhookStatus','success','✓ Webhook URL saved successfully!');
+            await loadDiscordSettings();
+        } else {
+            const data = await res.json();
+            showStatus('webhookStatus','error', data.error || 'Save failed');
+        }
+    } catch (e) {
+        showStatus('webhookStatus','error','Network error: ' + e.message);
+    }
+}
+
+async function testWebhook() {
+    const pw  = $('dc-webhook-pw').value.trim();
+    if (!pw)  return showStatus('webhookStatus','error','Admin password is required to test');
+
+    try {
+        const res = await fetch(`${API_URL}/discord/test`, {
+            method: 'POST',
+            headers: { 'X-Admin-Password': pw }
+        });
+        if (res.ok) {
+            showStatus('webhookStatus','success','📡 Test ping sent! Check your Discord channel.');
+        } else {
+            showStatus('webhookStatus','error','Failed to send test ping');
+        }
+    } catch (e) {
+        showStatus('webhookStatus','error','Error: ' + e.message);
+    }
+}
+
+async function sendWelcomePost() {
+    const pw = $('dc-welcome-pw').value.trim();
+    if (!pw) return showStatus('welcomeStatus','error','Admin password is required');
+
+    try {
+        const res = await fetch(`${API_URL}/discord/welcome`, {
+            method: 'POST',
+            headers: { 'X-Admin-Password': pw }
+        });
+        if (res.ok) {
+            showStatus('welcomeStatus','success','🎉 Welcome message broadcasted!');
+        } else {
+            showStatus('welcomeStatus','error','Broadcast failed');
+        }
+    } catch (e) {
+        showStatus('welcomeStatus','error','Error: ' + e.message);
+    }
+}
+
+async function sendLeaderboardPost() {
+    const season = $('dc-lb-season').value;
+    const pw     = $('dc-lb-pw').value.trim();
+    if (!season) return showStatus('lbPostStatus','error','Select a season');
+    if (!pw)     return showStatus('lbPostStatus','error','Admin password is required');
+
+    try {
+        const res = await fetch(`${API_URL}/discord/leaderboard`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Admin-Password': pw },
+            body: JSON.stringify({ season })
+        });
+        if (res.ok) {
+            showStatus('lbPostStatus','success',`🏆 Leaderboard for ${season} sent to Discord!`);
+        } else {
+            const data = await res.json();
+            showStatus('lbPostStatus','error', data.error || 'Failed to send leaderboard');
+        }
+    } catch (e) {
+        showStatus('lbPostStatus','error','Error: ' + e.message);
     }
 }
 </script>
