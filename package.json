@@ -1,0 +1,20 @@
+{
+  "name": "diablo4-hof",
+  "version": "2.0.0",
+  "description": "Diablo IV — Hall of Legends: Gamified Clan Achievement Tracker",
+  "main": "worker.js",
+  "scripts": {
+    "dev":        "wrangler dev",
+    "pages:dev":  "npx serve . --listen 3333",
+    "deploy":     "wrangler deploy",
+    "db:init":    "wrangler d1 execute diablo4-hof --local --file=database-schema.sql",
+    "db:init:remote": "wrangler d1 execute diablo4-hof --file=database-schema.sql",
+    "db:reset":   "wrangler d1 execute diablo4-hof --local --command=\"DROP TABLE IF EXISTS achievements; DROP TABLE IF EXISTS players; DROP TABLE IF EXISTS seasons;\" && npm run db:init"
+  },
+  "keywords": ["diablo4", "gamification", "cloudflare", "discord"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

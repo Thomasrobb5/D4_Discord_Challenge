@@ -1,0 +1,30 @@
+name = "diablo4-hof"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# ─── Cloudflare D1 Database ───────────────────────────────────────
+# Run: wrangler d1 create diablo4-hof
+# Then paste the returned database_id below
+[[d1_databases]]
+binding = "DB"
+database_name = "diablo4-hof"
+database_id   = "0aeb9e18-f94e-4239-9dba-00d1f9a96afb"
+
+# ─── Secrets (set via CLI, not in this file) ─────────────────────
+# wrangler secret put DISCORD_WEBHOOK_URL
+# wrangler secret put ADMIN_PASSWORD
+#
+# For local dev, create a .dev.vars file (gitignored) containing:
+#   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+#   ADMIN_PASSWORD=your-secret-password
+
+# ─── Local dev D1 (uses local SQLite) ────────────────────────────
+[dev]
+port = 8787
+local_protocol = "http"
+
+# ─── Production environment ──────────────────────────────────────
+[env.production]
+name = "diablo4-hof-production"
+# route = "your-domain.workers.dev/*"   # uncomment if using custom domain

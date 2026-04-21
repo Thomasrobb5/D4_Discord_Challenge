@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diablo IV — Hall of Legends</title>
+    <meta name="description" content="Track your dominance across Diablo IV seasons. Compete, conquer, and claim your place in the Hall of Legends.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- ── CINEMATIC BACKGROUND ── -->
+    <div class="bg-scene">
+        <div class="bg-image"></div>
+        <div class="bg-overlay"></div>
+        <div class="bg-vignette"></div>
+    </div>
+
+    <!-- ── PARTICLE CANVAS ── -->
+    <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+    <!-- ══════════════════════════════════════════════════════════
+         LANDING SCREEN
+    ══════════════════════════════════════════════════════════ -->
+    <div id="landingScreen" class="landing-screen">
+        <div class="landing-inner">
+
+            <!-- Logo -->
+            <div class="landing-logo-wrap">
+                <img src="Diablo_IV_2019_nosmoke_logo.webp" alt="Diablo IV" class="landing-logo">
+                <div class="logo-glow-ring"></div>
+            </div>
+
+            <!-- Title -->
+            <div class="landing-text-block">
+                <div class="landing-eyebrow">
+                    <span class="eyebrow-line"></span>
+                    <span class="eyebrow-text">Clan Competition</span>
+                    <span class="eyebrow-line"></span>
+                </div>
+                <h1 class="landing-main-title">Hall of <span class="title-accent">Legends</span></h1>
+                <p class="landing-subtitle">Conquer the darkness. Claim your glory. Rise among the damned.</p>
+            </div>
+
+            <!-- Season Countdown (shown when active season has an end date) -->
+            <div id="countdownSection" class="countdown-section hidden">
+                <div class="countdown-eyebrow" id="countdownLabel">Season ends in</div>
+                <div class="countdown-clock" id="countdownClock">
+                    <div class="clock-unit">
+                        <div class="clock-digit" id="cd-days">00</div>
+                        <div class="clock-label">Days</div>
+                    </div>
+                    <div class="clock-sep">:</div>
+                    <div class="clock-unit">
+                        <div class="clock-digit" id="cd-hours">00</div>
+                        <div class="clock-label">Hours</div>
+                    </div>
+                    <div class="clock-sep">:</div>
+                    <div class="clock-unit">
+                        <div class="clock-digit" id="cd-mins">00</div>
+                        <div class="clock-label">Mins</div>
+                    </div>
+                    <div class="clock-sep">:</div>
+                    <div class="clock-unit">
+                        <div class="clock-digit" id="cd-secs">00</div>
+                        <div class="clock-label">Secs</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Time Leaderboard shortcut -->
+            <div class="alltime-shortcut" id="alltimeShortcut">
+                <button class="alltime-shortcut-btn" id="alltimeShortcutBtn">
+                    <span class="alltime-shortcut-icon">🌍</span>
+                    <span>View All Time Leaderboard</span>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="opacity:0.6">
+                        <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Season Cards -->
+            <div class="season-select-section">
+                <div class="season-select-label">
+                    <span class="select-icon">⚔</span>
+                    <span>Choose Your Season</span>
+                    <span class="select-icon">⚔</span>
+                </div>
+                <div class="seasons-grid" id="seasonsGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+
+        </div><!-- /.landing-inner -->
+    </div><!-- /.landing-screen -->
+
+    <div class="corner-deco tl"></div>
+    <div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div>
+    <div class="corner-deco br"></div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         MAIN APP
+    ══════════════════════════════════════════════════════════ -->
+    <div id="mainApp" class="main-app hidden">
+
+        <!-- STICKY HEADER -->
+        <header class="site-header" id="siteHeader">
+            <div class="header-inner">
+                <button class="btn-back" id="backBtn" title="Back to Season Select">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Seasons</span>
+                </button>
+
+                <div class="header-logo">
+                    <img src="Diablo_IV_2019_nosmoke_logo.webp" alt="Diablo IV" class="header-logo-img">
+                    <div class="header-title-block">
+                        <div class="header-season-name" id="seasonTitle">Season 10</div>
+                        <div class="header-subtitle">Hall of Legends</div>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <nav class="main-nav">
+                        <button class="nav-btn active" data-tab="leaderboard" id="nav-leaderboard">
+                            <span class="nav-icon">🏆</span>
+                            <span>Leaderboard</span>
+                        </button>
+                        <button class="nav-btn" data-tab="bingo" id="nav-bingo">
+                            <span class="nav-icon">🎯</span>
+                            <span>Bingo Board</span>
+                        </button>
+                        <button class="nav-btn" data-tab="achievements" id="nav-achievements">
+                            <span class="nav-icon">🎖</span>
+                            <span>Achievements</span>
+                        </button>
+                        <button class="nav-btn" data-tab="alltime" id="nav-alltime">
+                            <span class="nav-icon">🌍</span>
+                            <span>All Time</span>
+                        </button>
+                    </nav>
+
+                    <!-- Admin record button — only visible when admin session active -->
+                    <button class="btn-record-achievement hidden" id="btnRecordAchievement" title="Record Achievement">
+                        <span>⚡</span> Record
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- SEASON HERO BAR -->
+        <div class="season-hero" id="seasonHero">
+            <div class="season-hero-inner">
+                <div class="season-stat-pill">
+                    <div class="pill-label">Champions</div>
+                    <div class="pill-value" id="heroPlayers">—</div>
+                </div>
+                <div class="season-divider-icon">☩</div>
+                <div class="season-stat-pill">
+                    <div class="pill-label">Achievements Claimed</div>
+                    <div class="pill-value" id="heroAchievements">—</div>
+                </div>
+                <div class="season-divider-icon">☩</div>
+                <div class="season-stat-pill">
+                    <div class="pill-label">Total Glory Points</div>
+                    <div class="pill-value" id="heroPoints">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <main class="site-main">
+
+            <!-- ─── LEADERBOARD TAB ─── -->
+            <section id="leaderboard" class="tab-panel active">
+                <div class="panel-header">
+                    <h2 class="panel-title"><span class="panel-title-icon">🏆</span> Leaderboard</h2>
+                    <p class="panel-subtitle">Rankings by conquest points — only the mightiest endure</p>
+                </div>
+                <div class="leaderboard-wrap">
+                    <div class="podium-section" id="podiumSection"></div>
+                    <div class="controls-bar" style="margin-bottom:1.25rem">
+                        <div class="search-wrap">
+                            <span class="search-icon-inner">🔍</span>
+                            <input type="text" id="playerSearch" class="control-input" placeholder="Search champion...">
+                        </div>
+                    </div>
+                    <div class="lb-table">
+                        <div class="lb-table-head">
+                            <div class="col-rank">Rank</div>
+                            <div class="col-player">Champion</div>
+                            <div class="col-class">Class</div>
+                            <div class="col-points">Glory Points</div>
+                            <div class="col-ach">Achievements</div>
+                        </div>
+                        <div class="lb-table-body" id="leaderboardList"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ─── ACHIEVEMENTS TAB ─── -->
+            <section id="achievements" class="tab-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><span class="panel-title-icon">🎖</span> Achievement Gallery</h2>
+                    <p class="panel-subtitle">Legendary feats and first bloods recorded for eternity</p>
+                </div>
+                <div class="controls-bar multi">
+                    <div class="search-wrap">
+                        <span class="search-icon-inner">🔍</span>
+                        <input type="text" id="achievementSearch" class="control-input" placeholder="Search achievement or champion...">
+                    </div>
+                    <select id="pointsFilter" class="control-select">
+                        <option value="">All Points</option>
+                        <option value="1">1 Point</option>
+                        <option value="2">2 Points</option>
+                        <option value="3">3 Points</option>
+                        <option value="5">5 Points (Bonus)</option>
+                    </select>
+                    <select id="rarity-filter" class="control-select">
+                        <option value="">All Rarities</option>
+                        <option value="legendary">Legendary</option>
+                        <option value="ancestral">Ancestral</option>
+                        <option value="unique">Unique</option>
+                        <option value="mythic">Mythic</option>
+                        <option value="chaos">Chaos</option>
+                    </select>
+                </div>
+                <div id="achievementGrid" class="ach-grid"></div>
+            </section>
+
+            <!-- ─── BINGO BOARD TAB ─── -->
+            <section id="bingo" class="tab-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><span class="panel-title-icon">🎯</span> Bingo Board</h2>
+                    <p class="panel-subtitle">Every achievement slot — claimed or still up for grabs. First to get it wins it.</p>
+                </div>
+                <div id="bingoBoard" class="bingo-board"></div>
+            </section>
+
+            <!-- ─── ALL TIME LEADERBOARD TAB ─── -->
+            <section id="alltime" class="tab-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><span class="panel-title-icon">🌍</span> All Time Leaderboard</h2>
+                    <p class="panel-subtitle">Total glory across every season — the eternal hall of legends</p>
+                </div>
+
+                <!-- Global podium -->
+                <div class="podium-section" id="globalPodiumSection" style="margin-bottom:2rem"></div>
+
+                <!-- Per-player breakdown -->
+                <div class="lb-table" id="globalLbTable">
+                    <div class="lb-table-head" style="grid-template-columns:70px 1fr 120px 130px 140px 130px">
+                        <div class="col-rank">Rank</div>
+                        <div class="col-player">Champion</div>
+                        <div class="col-class">Class</div>
+                        <div class="col-points">Total Points</div>
+                        <div class="col-ach">Achievements</div>
+                        <div class="col-ach">Seasons</div>
+                    </div>
+                    <div class="lb-table-body" id="globalLbList"></div>
+                </div>
+
+                <!-- Per-season breakdown table -->
+                <div style="margin-top:3rem">
+                    <div class="panel-header" style="margin-bottom:1.5rem">
+                        <h3 class="panel-title" style="font-size:1.3rem"><span class="panel-title-icon">📜</span> Season History</h3>
+                    </div>
+                    <div class="lb-table">
+                        <div class="lb-table-head" style="grid-template-columns:80px 1fr 100px 130px 130px 160px">
+                            <div class="col-rank">Season</div>
+                            <div class="col-player">Name</div>
+                            <div class="col-class">Status</div>
+                            <div class="col-points">Points</div>
+                            <div class="col-ach">Achievements</div>
+                            <div class="col-ach">Winner</div>
+                        </div>
+                        <div class="lb-table-body" id="seasonHistoryList"></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- ACHIEVEMENT DETAIL MODAL -->
+        <div id="achievementModal" class="modal-overlay" role="dialog" aria-modal="true">
+            <div class="modal-box">
+                <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close">&times;</button>
+                <div id="modalBody" class="modal-content-inner"></div>
+            </div>
+        </div>
+
+        <!-- BINGO CLAIM MODAL (public — no admin needed) -->
+        <div id="bingoClaimModal" class="modal-overlay admin-unlock-overlay" role="dialog" aria-modal="true">
+            <div class="modal-box admin-unlock-box" style="max-width:460px;text-align:left">
+                <button class="modal-close-btn" id="bingoClaimClose" aria-label="Close">&times;</button>
+                <div class="admin-unlock-icon">🎯</div>
+                <h2 class="admin-unlock-title" id="bingoClaimTitle">Claim Achievement</h2>
+                <p class="admin-unlock-sub" id="bingoClaimDesc"></p>
+                <form id="bingoClaimForm" style="margin-top:1rem">
+                    <div class="record-field" style="margin-bottom:1rem">
+                        <label class="record-label" for="bingo-player">Your Name</label>
+                        <select class="record-select" id="bingo-player" required style="width:100%">
+                            <option value="">— Select your name —</option>
+                        </select>
+                    </div>
+                    <div class="record-field" style="margin-bottom:1.25rem">
+                        <label class="record-label" for="bingo-notes">Notes <span style="color:var(--text-dim);font-size:0.7rem">(optional)</span></label>
+                        <input type="text" class="record-input" id="bingo-notes" placeholder="e.g. Dropped in Pit T100" style="width:100%">
+                    </div>
+                    <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+                        <button type="button" class="btn-cancel" id="bingoCancelBtn">Cancel</button>
+                        <button type="submit" class="btn-submit-record" id="bingoSubmitBtn">
+                            <span class="submit-icon">🎯</span>
+                            <span class="submit-text">Claim It!</span>
+                            <span class="submit-loading hidden">Claiming…</span>
+                        </button>
+                    </div>
+                    <div id="bingoClaimStatus" class="record-status hidden"></div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- ═══════════════════════════════════════════════════════
+             RECORD ACHIEVEMENT MODAL  [admin-only]
+        ═══════════════════════════════════════════════════════ -->
+        <div id="recordModal" class="modal-overlay record-modal-overlay" role="dialog" aria-modal="true">
+            <div class="modal-box record-modal-box">
+                <button class="modal-close-btn" id="recordModalClose" aria-label="Close">&times;</button>
+
+                <div class="record-modal-header">
+                    <div class="record-modal-icon">⚡</div>
+                    <h2 class="record-modal-title">Record Achievement</h2>
+                    <p class="record-modal-sub">Award a feat to a champion — Discord will be notified automatically</p>
+                </div>
+
+                <form id="recordForm" class="record-form" novalidate>
+                    <div class="record-form-grid">
+
+                        <!-- Player -->
+                        <div class="record-field">
+                            <label class="record-label" for="rf-player">Champion</label>
+                            <select class="record-select" id="rf-player" required>
+                                <option value="">— Select Player —</option>
+                            </select>
+                        </div>
+
+                        <!-- Achievement Type -->
+                        <div class="record-field record-field-wide">
+                            <label class="record-label" for="rf-type">Achievement Type</label>
+                            <select class="record-select" id="rf-type" required>
+                                <optgroup label="── 1 Point ──────────────">
+                                    <option value="legendary-item">Legendary Item</option>
+                                    <option value="ancestral-legendary">Ancestral Legendary</option>
+                                    <option value="unique-item">Unique Item</option>
+                                    <option value="ancestral-unique">Ancestral Unique</option>
+                                    <option value="ancestral-legendary-2ga">Ancestral Legendary (2GA)</option>
+                                    <option value="ancestral-unique-2ga">Ancestral Unique (2GA)</option>
+                                    <option value="chaos-unique-1ga">Chaos Unique (1GA)</option>
+                                    <option value="any-1ga-item">Any 1GA Item</option>
+                                </optgroup>
+                                <optgroup label="── 2 Points ─────────────">
+                                    <option value="ancestral-unique-3ga">Ancestral Unique (3GA)</option>
+                                    <option value="ancestral-legendary-3ga">Ancestral Legendary (3GA)</option>
+                                    <option value="mythic-1ga">Mythic Item (1GA)</option>
+                                    <option value="mythic-no-cache">Mythic Item (No Cache)</option>
+                                    <option value="mythic-2ga">Mythic Item (2GA)</option>
+                                    <option value="chaos-unique-2ga">Chaos Unique (2GA)</option>
+                                    <option value="grandpapa-bonus">Grandpapa Bonus</option>
+                                </optgroup>
+                                <optgroup label="── 3 Points ─────────────">
+                                    <option value="mythic-3ga">Mythic Item (3GA)</option>
+                                    <option value="ancestral-unique-4ga">Ancestral Unique (4GA)</option>
+                                    <option value="mythic-4ga">Mythic Item (4GA)</option>
+                                    <option value="chaos-unique-3ga">Chaos Unique (3GA)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Points preview -->
+                        <div class="record-field">
+                            <label class="record-label">Points Value</label>
+                            <div class="points-preview" id="rf-points-preview">
+                                <span class="pts-icon">🪙</span>
+                                <span class="pts-value" id="rf-pts-val">—</span>
+                                <span class="pts-label">pts</span>
+                            </div>
+                        </div>
+
+                        <!-- Season -->
+                        <div class="record-field">
+                            <label class="record-label" for="rf-season">Season</label>
+                            <select class="record-select" id="rf-season" required>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <!-- Date/Time -->
+                        <div class="record-field">
+                            <label class="record-label" for="rf-timestamp">Date &amp; Time</label>
+                            <input type="datetime-local" class="record-input" id="rf-timestamp" required>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="record-field record-field-wide">
+                            <label class="record-label" for="rf-notes">Notes <span style="font-weight:400;color:var(--text-dim)">(optional)</span></label>
+                            <input type="text" class="record-input" id="rf-notes" placeholder="e.g. Found in Pit level 120">
+                        </div>
+
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="record-actions">
+                        <button type="button" class="btn-cancel" id="recordCancelBtn">Cancel</button>
+                        <button type="submit" class="btn-submit-record" id="recordSubmitBtn">
+                            <span class="submit-icon">⚡</span>
+                            <span class="submit-text">Record &amp; Notify Discord</span>
+                            <span class="submit-loading hidden">Saving…</span>
+                        </button>
+                    </div>
+
+                    <!-- Status messages -->
+                    <div class="record-status hidden" id="recordStatus"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════
+             ADMIN UNLOCK MODAL
+        ═══════════════════════════════════════════════════════ -->
+        <div id="adminUnlockModal" class="modal-overlay admin-unlock-overlay" role="dialog" aria-modal="true">
+            <div class="modal-box admin-unlock-box">
+                <button class="modal-close-btn" id="adminUnlockClose" aria-label="Close">&times;</button>
+                <div class="admin-unlock-icon">🔐</div>
+                <h3 class="admin-unlock-title">Admin Access</h3>
+                <p class="admin-unlock-sub">Enter the admin password to unlock achievement recording</p>
+                <form id="adminUnlockForm" novalidate>
+                    <div class="record-field">
+                        <label class="record-label" for="adminPassword">Password</label>
+                        <input type="password" class="record-input" id="adminPassword" placeholder="Enter password..." autocomplete="current-password">
+                    </div>
+                    <div class="admin-unlock-error hidden" id="adminUnlockError">Incorrect password — try again</div>
+                    <button type="submit" class="btn-submit-record" style="width:100%;margin-top:1rem">
+                        Unlock Admin Mode
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="site-footer">
+            <div class="footer-inner">
+                <img src="Diablo_IV_2019_nosmoke_logo.webp" alt="Diablo IV" class="footer-logo">
+                <p class="footer-text">Conquer the darkness. Claim your glory. Season awaits. ⚔</p>
+                <p class="footer-copy">© 2025 Diablo IV Hall of Legends — Fan Project</p>
+                <p class="footer-copy" style="font-size:0.65rem;opacity:0.45;margin-top:0.25rem;letter-spacing:0.1em">
+                    v2.1.0 &nbsp;·&nbsp; Built Apr 2026
+                </p>
+                <!-- Hidden admin trigger -->
+                <button class="admin-lock-btn" id="adminLockBtn" title="Admin access" aria-label="Admin unlock">
+                    <span id="adminLockIcon">🔒</span>
+                </button>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

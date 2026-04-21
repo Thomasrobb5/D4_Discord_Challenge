@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Diablo IV Hall of Legends</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blood-red:    #8b0000;
+            --blood-bright: #c0392b;
+            --ember-gold:   #c9a84c;
+            --void-black:   #07050f;
+            --stone-grey:   #1c1c26;
+            --text-bright:  #f5f0e8;
+            --text-mid:     #b8b0a0;
+            --text-dim:     #6a6070;
+            --ash-silver:   #9ea7b8;
+            --border-subtle: rgba(255,255,255,0.07);
+            --border-red:   rgba(139,0,0,0.5);
+            --success-clr:  #4ade80;
+            --error-clr:    #f87171;
+            --r-sm: 4px; --r-md: 8px; --r-lg: 16px;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { min-height: 100%; background: var(--void-black); color: var(--text-bright); font-family: 'Inter', sans-serif; }
+
+        /* ── Background ── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 0;
+            background: url('1105165.jpg') center center / cover no-repeat;
+            opacity: 0.08;
+        }
+
+        /* ── Layout ── */
+        .admin-layout { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+        /* ── Header ── */
+        .admin-header {
+            display: flex; align-items: center; gap: 1.5rem;
+            padding-bottom: 2rem; margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border-red);
+        }
+        .admin-header-logo { height: 52px; filter: drop-shadow(0 0 12px rgba(139,0,0,0.8)); }
+        .admin-header-text {}
+        .admin-title { font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 700; color: var(--text-bright); }
+        .admin-subtitle { font-size: 0.82rem; color: var(--text-dim); margin-top: 0.2rem; letter-spacing: 0.05em; }
+        .admin-back-link { margin-left: auto; font-family: 'Cinzel', serif; font-size: 0.72rem; color: var(--ember-gold); text-decoration: none; letter-spacing: 0.1em; border: 1px solid rgba(201,168,76,0.3); padding: 0.5rem 1rem; border-radius: var(--r-sm); transition: all 0.2s; }
+        .admin-back-link:hover { background: rgba(201,168,76,0.1); border-color: var(--ember-gold); }
+
+        /* ── Stats bar ── */
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: rgba(28,28,38,0.8); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 1.25rem; text-align: center; backdrop-filter: blur(8px); }
+        .stat-card-label { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.4rem; }
+        .stat-card-value { font-family: 'Cinzel', serif; font-size: 2rem; font-weight: 700; color: var(--ember-gold); }
+
+        /* ── Section cards ── */
+        .admin-section {
+            background: rgba(12,10,22,0.85); border: 1px solid var(--border-subtle);
+            border-radius: var(--r-lg); padding: 2rem; margin-bottom: 1.5rem;
+            backdrop-filter: blur(12px);
+            position: relative; overflow: hidden;
+        }
+        .admin-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--blood-red), transparent); }
+        .section-title { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: var(--text-bright); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; }
+        .section-icon { font-size: 1rem; }
+
+        /* ── Forms ── */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+        .form-field { display: flex; flex-direction: column; gap: 0.35rem; }
+        .form-field.wide { grid-column: 1 / -1; }
+        .form-label { font-family: 'Cinzel', serif; font-size: 0.67rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ember-gold); }
+        .form-input, .form-select {
+            background: rgba(7,5,15,0.9); border: 1px solid var(--border-subtle);
+            color: var(--text-bright); padding: 0.7rem 0.9rem;
+            border-radius: var(--r-md); font-size: 0.9rem; font-family: 'Inter', sans-serif;
+            width: 100%; transition: all 0.18s;
+        }
+        .form-input::placeholder { color: var(--text-dim); }
+        .form-input:focus, .form-select:focus { outline: none; border-color: rgba(139,0,0,0.6); box-shadow: 0 0 0 1px rgba(139,0,0,0.3); }
+        .form-select option { background: var(--stone-grey); }
+        .form-select optgroup { color: var(--ember-gold); }
+
+        /* ── Buttons ── */
+        .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.4rem; border-radius: var(--r-sm); border: 1px solid; cursor: pointer; font-family: 'Cinzel', serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.18s; }
+        .btn-primary { background: linear-gradient(135deg, rgba(139,0,0,0.5), rgba(226,88,34,0.3)); border-color: rgba(139,0,0,0.6); color: #f0c060; }
+        .btn-primary:hover { background: linear-gradient(135deg, rgba(192,57,43,0.7), rgba(226,88,34,0.5)); border-color: #c9a84c; box-shadow: 0 0 20px rgba(139,0,0,0.4); }
+        .btn-danger  { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.4); color: #f87171; padding: 0.35rem 0.75rem; font-size: 0.7rem; }
+        .btn-danger:hover { background: rgba(239,68,68,0.2); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── Status messages ── */
+        .status-msg { padding: 0.75rem 1rem; border-radius: var(--r-md); font-size: 0.85rem; margin-top: 0.75rem; display: none; font-family: 'Cinzel', serif; letter-spacing: 0.04em; }
+        .status-msg.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--success-clr); }
+        .status-msg.error   { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--error-clr); }
+
+        /* ── Tables ── */
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; font-size: 0.85rem; }
+        .data-table th { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ember-gold); padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid rgba(139,0,0,0.3); background: rgba(139,0,0,0.08); }
+        .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-subtle); color: var(--text-mid); vertical-align: middle; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover td { background: rgba(139,0,0,0.06); }
+
+        /* Rarity badge */
+        .rarity-pip { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.4rem; }
+        .rarity-legendary { background: #c9a84c; } .rarity-ancestral { background: #9b59b6; }
+        .rarity-unique    { background: #1abc9c; } .rarity-mythic    { background: #e74c3c; }
+        .rarity-chaos     { background: #e67e22; }
+
+        /* Tabs */
+        .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .tab-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); color: var(--text-dim); padding: 0.55rem 1.1rem; border-radius: var(--r-sm); cursor: pointer; font-family: 'Cinzel', serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.18s; }
+        .tab-btn:hover  { border-color: rgba(139,0,0,0.4); color: var(--text-bright); }
+        .tab-btn.active { background: rgba(139,0,0,0.25); border-color: var(--blood-bright); color: var(--ember-gold); }
+        .tab-pane { display: none; } .tab-pane.active { display: block; }
+
+        /* API status */
+        .api-status { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; padding: 0.3rem 0.7rem; border-radius: 20px; }
+        .api-status.ok   { color: var(--success-clr); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25); }
+        .api-status.fail { color: var(--error-clr); background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); }
+        .api-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+        .quick-sql { background: rgba(7,5,15,0.8); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 0.9rem 1rem; font-family: monospace; font-size: 0.8rem; color: var(--ash-silver); width: 100%; resize: vertical; min-height: 70px; margin-top: 0.5rem; }
+
+        /* ── Challenge Configurator ── */
+        .challenge-tier-hdr {
+            font-family: 'Cinzel', serif; font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.3em; text-transform: uppercase; color: var(--ember-gold);
+            display: flex; align-items: center; gap: 0.75rem; margin: 1.25rem 0 0.6rem;
+        }
+        .challenge-tier-hdr::after { content: ''; flex: 1; height: 1px; background: rgba(201,168,76,0.25); }
+        .challenge-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.65rem;
+        }
+        .challenge-row {
+            display: flex; align-items: center; gap: 0.6rem;
+            background: rgba(7,5,15,0.6); border: 1px solid var(--border-subtle);
+            border-radius: var(--r-md); padding: 0.55rem 0.75rem;
+            transition: border-color 0.18s;
+        }
+        .challenge-row.active { border-color: rgba(139,0,0,0.35); }
+        .challenge-toggle { flex-shrink: 0; width: 16px; height: 16px; cursor: pointer; accent-color: #c9a84c; }
+        .challenge-name { flex: 1; font-size: 0.82rem; color: var(--text-mid); }
+        .challenge-row.active .challenge-name { color: var(--text-bright); }
+        .challenge-pts-input {
+            width: 48px; text-align: center; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle);
+            border-radius: 4px; color: var(--ember-gold); font-family: 'Cinzel', serif; font-size: 0.78rem;
+            font-weight: 700; padding: 0.2rem 0.3rem;
+        }
+        .challenge-pts-label { font-size: 0.7rem; color: var(--text-dim); }
+
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-field.wide { grid-column: 1; }
+            .admin-header { flex-wrap: wrap; }
+            .admin-back-link { margin-left: 0; }
+            .challenge-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+
+</head>
+<body>
+<div class="admin-layout">
+
+    <!-- Header -->
+    <div class="admin-header">
+        <img src="Diablo_IV_2019_nosmoke_logo.webp" alt="Diablo IV" class="admin-header-logo">
+        <div class="admin-header-text">
+            <div class="admin-title">Admin Panel</div>
+            <div class="admin-subtitle">Manage achievements, players, and seasons</div>
+        </div>
+        <div id="apiStatusBadge" class="api-status fail"><div class="api-dot"></div> API offline</div>
+        <a href="index.html" class="admin-back-link">← View Site</a>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="stats-bar">
+        <div class="stat-card"><div class="stat-card-label">Players</div><div class="stat-card-value" id="stat-players">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">Achievements</div><div class="stat-card-value" id="stat-achievements">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">Seasons</div><div class="stat-card-value" id="stat-seasons">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Points</div><div class="stat-card-value" id="stat-points">—</div></div>
+    </div>
+
+    <!-- Section tabs -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-record">⚡ Record Achievement</button>
+        <button class="tab-btn" data-tab="tab-setup">🎮 Setup Season</button>
+        <button class="tab-btn" data-tab="tab-players">👤 Players</button>
+        <button class="tab-btn" data-tab="tab-seasons">📅 Seasons</button>
+        <button class="tab-btn" data-tab="tab-history">📋 History</button>
+        <button class="tab-btn" data-tab="tab-sql">⚙ Quick SQL</button>
+    </div>
+
+    <!-- ─── RECORD ACHIEVEMENT ─── -->
+    <div class="tab-pane active" id="tab-record">
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">⚡</span> Record Achievement</div>
+            <form id="achievementForm">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label class="form-label">Player</label>
+                        <select class="form-select" id="ach-player" required>
+                            <option value="">— Select Player —</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Achievement Type</label>
+                        <select class="form-select" id="ach-type" required>
+                            <optgroup label="── 1 Point ──">
+                                <option value="legendary-item">Legendary Item</option>
+                                <option value="ancestral-legendary">Ancestral Legendary</option>
+                                <option value="unique-item">Unique Item</option>
+                                <option value="ancestral-unique">Ancestral Unique</option>
+                                <option value="ancestral-legendary-2ga">Ancestral Legendary (2GA)</option>
+                                <option value="ancestral-unique-2ga">Ancestral Unique (2GA)</option>
+                                <option value="chaos-unique-1ga">Chaos Unique (1GA)</option>
+                                <option value="any-1ga-item">Any 1GA Item</option>
+                            </optgroup>
+                            <optgroup label="── 2 Points ──">
+                                <option value="ancestral-unique-3ga">Ancestral Unique (3GA)</option>
+                                <option value="ancestral-legendary-3ga">Ancestral Legendary (3GA)</option>
+                                <option value="mythic-1ga">Mythic Item (1GA)</option>
+                                <option value="mythic-no-cache">Mythic Item (No Cache)</option>
+                                <option value="mythic-2ga">Mythic Item (2GA)</option>
+                                <option value="chaos-unique-2ga">Chaos Unique (2GA)</option>
+                                <option value="grandpapa-bonus">Grandpapa Bonus</option>
+                            </optgroup>
+                            <optgroup label="── 3 Points ──">
+                                <option value="mythic-3ga">Mythic Item (3GA)</option>
+                                <option value="ancestral-unique-4ga">Ancestral Unique (4GA)</option>
+                                <option value="mythic-4ga">Mythic Item (4GA)</option>
+                                <option value="chaos-unique-3ga">Chaos Unique (3GA)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Season</label>
+                        <select class="form-select" id="ach-season" required onchange="updateAchTypeForSeason()"></select>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Date &amp; Time</label>
+                        <input type="datetime-local" class="form-input" id="ach-timestamp" required>
+                    </div>
+                    <div class="form-field wide">
+                        <label class="form-label">Notes (optional)</label>
+                        <input type="text" class="form-input" id="ach-notes" placeholder="e.g. Dropped in Pit T100">
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+                    <button type="submit" class="btn btn-primary" id="achSubmitBtn">⚡ Record &amp; Notify Discord</button>
+                    <label class="form-label" style="margin:0">Admin Password</label>
+                    <input type="password" class="form-input" id="adminPw" placeholder="Required" style="max-width:200px;">
+                </div>
+                <div class="status-msg" id="achStatus"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── PLAYERS ─── -->
+    <div class="tab-pane" id="tab-players">
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">👤</span> Add Player</div>
+            <form id="playerForm">
+                <div class="form-grid">
+                    <div class="form-field"><label class="form-label">Name</label><input type="text" class="form-input" id="p-name" required placeholder="e.g. ShadowMage"></div>
+                    <div class="form-field"><label class="form-label">Class</label>
+                        <select class="form-select" id="p-class">
+                            <option value="Unknown">Unknown</option>
+                            <option value="Barbarian">Barbarian</option>
+                            <option value="Druid">Druid</option>
+                            <option value="Necromancer">Necromancer</option>
+                            <option value="Rogue">Rogue</option>
+                            <option value="Sorcerer">Sorcerer</option>
+                            <option value="Spiritborn">Spiritborn</option>
+                        </select>
+                    </div>
+                    <div class="form-field"><label class="form-label">Discord ID (optional)</label><input type="text" class="form-input" id="p-discord" placeholder="@username"></div>
+                    <div class="form-field"><label class="form-label">Admin Password</label><input type="password" class="form-input" id="p-pw" placeholder="Required"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Player</button>
+                <div class="status-msg" id="playerStatus"></div>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">📋</span> Player List</div>
+            <table class="data-table" id="playersTable">
+                <thead><tr><th>ID</th><th>Name</th><th>Class</th><th>Discord</th><th>Actions</th></tr></thead>
+                <tbody id="playersTableBody"><tr><td colspan="5" style="color:var(--text-dim);text-align:center">Loading…</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ─── SETUP SEASON WIZARD ─── -->
+    <div class="tab-pane" id="tab-setup">
+
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">🎮</span> Season Setup Wizard</div>
+            <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:1.5rem">
+                Configure a new or existing season — set the season details, select which challenges are active, and customise point values. Hit <strong style="color:var(--ember-gold)">Save Setup</strong> when done.
+            </p>
+
+            <!-- Mode toggle -->
+            <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem">
+                <button class="btn btn-primary" id="setup-mode-new" onclick="setSetupMode('new')">+ New Season</button>
+                <button class="btn" style="background:rgba(255,255,255,0.05);border-color:var(--border-subtle);color:var(--text-mid)" id="setup-mode-edit" onclick="setSetupMode('edit')">Edit Existing</button>
+            </div>
+
+            <!-- Edit existing selector -->
+            <div id="setup-edit-row" style="display:none;margin-bottom:1.25rem">
+                <div class="form-field" style="max-width:360px">
+                    <label class="form-label">Select Season to Edit</label>
+                    <select class="form-select" id="setup-season-select" onchange="loadSeasonIntoSetup()"></select>
+                </div>
+            </div>
+
+            <!-- Season details -->
+            <div class="form-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-bottom:1.5rem">
+                <div class="form-field">
+                    <label class="form-label">Season Number</label>
+                    <input type="number" class="form-input" id="ss-number" placeholder="13" min="1">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">Season Name</label>
+                    <input type="text" class="form-input" id="ss-name" placeholder="e.g. Season of Lord of Hatred">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">Slug (for URLs)</label>
+                    <input type="text" class="form-input" id="ss-slug" placeholder="season-13">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="ss-status">
+                        <option value="upcoming">Upcoming</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">Countdown / Start Date</label>
+                    <input type="datetime-local" class="form-input" id="ss-start">
+                </div>
+                <div class="form-field">
+                    <label class="form-label">End Date</label>
+                    <input type="datetime-local" class="form-input" id="ss-end">
+                </div>
+            </div>
+
+            <!-- Challenge Configurator -->
+            <div style="margin-bottom:1.25rem">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                    <div class="section-title" style="margin-bottom:0;font-size:0.95rem">🏆 Challenge Configuration</div>
+                    <div style="display:flex;gap:0.5rem">
+                        <button class="btn" style="font-size:0.68rem;padding:0.4rem 0.8rem;background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.25);color:#4ade80" onclick="setAllChallenges(true)">Enable All</button>
+                        <button class="btn" style="font-size:0.68rem;padding:0.4rem 0.8rem;background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.25);color:#f87171" onclick="setAllChallenges(false)">Disable All</button>
+                    </div>
+                </div>
+                <div id="challengeConfigurator"></div>
+            </div>
+
+            <!-- Custom Challenges Builder -->
+            <div style="margin-bottom:1.5rem;padding:1rem;background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:8px">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
+                    <span style="font-size:1rem">✨</span>
+                    <div class="section-title" style="margin-bottom:0;font-size:0.92rem;color:var(--admin-gold)">Custom Challenges for This Season</div>
+                </div>
+                <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.5">
+                    Add new challenge types that don't exist in the standard list (e.g. new item types for Season 13).
+                    These appear on the Bingo Board alongside the standard challenges.
+                </p>
+
+                <!-- Add form -->
+                <div style="display:grid;grid-template-columns:1fr 90px auto;gap:0.6rem;align-items:end;margin-bottom:0.75rem">
+                    <div>
+                        <label class="form-label" style="font-size:0.68rem">Challenge Name</label>
+                        <input type="text" class="form-input" id="custom-ch-name" placeholder="e.g. Resplendent Spark (1GA)" style="width:100%">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size:0.68rem">Points</label>
+                        <input type="number" class="form-input" id="custom-ch-pts" value="1" min="1" max="10" style="width:100%">
+                    </div>
+                    <button class="btn btn-primary" style="padding:0.5rem 1rem;font-size:0.72rem" onclick="addCustomChallenge()">+ Add</button>
+                </div>
+
+                <!-- Custom challenge list -->
+                <div id="customChallengeList" style="display:flex;flex-wrap:wrap;gap:0.5rem"></div>
+            </div>
+
+            <!-- Save -->
+            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="saveSeasonSetup()">💾 Save Setup</button>
+                <div class="form-field" style="margin:0;flex:0 0 auto">
+                    <input type="password" class="form-input" id="ss-pw" placeholder="Admin password" style="width:180px">
+                </div>
+            </div>
+            <div class="status-msg" id="setupStatus" style="margin-top:0.75rem"></div>
+        </div>
+    </div>
+
+    <!-- ─── SEASONS ─── -->
+    <div class="tab-pane" id="tab-seasons">
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">📅</span> Create Season</div>
+            <form id="seasonForm">
+                <div class="form-grid">
+                    <div class="form-field"><label class="form-label">Season Number</label><input type="number" class="form-input" id="s-number" placeholder="11" required></div>
+                    <div class="form-field"><label class="form-label">Name</label><input type="text" class="form-input" id="s-name" placeholder="e.g. Season of Eternal Conflict" required></div>
+                    <div class="form-field"><label class="form-label">Slug</label><input type="text" class="form-input" id="s-slug" placeholder="e.g. season-11" required></div>
+                    <div class="form-field"><label class="form-label">Status</label>
+                        <select class="form-select" id="s-status">
+                            <option value="upcoming">Upcoming</option>
+                            <option value="active">Active</option>
+                        </select>
+                    </div>
+                    <div class="form-field"><label class="form-label">Start Date</label><input type="datetime-local" class="form-input" id="s-start"></div>
+                    <div class="form-field"><label class="form-label">End Date (for countdown)</label><input type="datetime-local" class="form-input" id="s-end"></div>
+                    <div class="form-field"><label class="form-label">Admin Password</label><input type="password" class="form-input" id="s-pw" placeholder="Required"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Season</button>
+                <div class="status-msg" id="seasonStatus"></div>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">🗓</span> Update Season End Date</div>
+            <form id="updateSeasonForm">
+                <div class="form-grid">
+                    <div class="form-field"><label class="form-label">Season</label><select class="form-select" id="us-season"></select></div>
+                    <div class="form-field"><label class="form-label">Status</label>
+                        <select class="form-select" id="us-status">
+                            <option value="active">Active</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="form-field"><label class="form-label">End Date</label><input type="datetime-local" class="form-input" id="us-end"></div>
+                    <div class="form-field"><label class="form-label">Admin Password</label><input type="password" class="form-input" id="us-pw" placeholder="Required"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Season</button>
+                <div class="status-msg" id="updateSeasonStatus"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── HISTORY ─── -->
+    <div class="tab-pane" id="tab-history">
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">📋</span> Recent Achievements</div>
+            <table class="data-table" id="historyTable">
+                <thead><tr><th>Player</th><th>Achievement</th><th>Rarity</th><th>Pts</th><th>Season</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody id="historyTableBody"><tr><td colspan="7" style="color:var(--text-dim);text-align:center">Loading…</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ─── QUICK SQL ─── -->
+    <div class="tab-pane" id="tab-sql">
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">⚙</span> Quick D1 Console Snippets</div>
+            <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:1.25rem">Copy these SQL commands and run them in the <a href="https://dash.cloudflare.com" target="_blank" style="color:var(--ember-gold)">Cloudflare D1 Console</a>.</p>
+
+            <div class="form-field"><label class="form-label">Leaderboard (all seasons)</label>
+                <textarea class="quick-sql" readonly>SELECT p.name, p.class, COALESCE(SUM(a.points),0) AS total_pts, COUNT(a.id) AS ach_count
+FROM players p LEFT JOIN achievements a ON p.id = a.player_id
+GROUP BY p.id ORDER BY total_pts DESC;</textarea></div>
+
+            <div class="form-field" style="margin-top:1rem"><label class="form-label">Season stats</label>
+                <textarea class="quick-sql" readonly>SELECT season, COUNT(DISTINCT player_id) AS players, COUNT(id) AS achievements, SUM(points) AS total_pts
+FROM achievements GROUP BY season ORDER BY season DESC;</textarea></div>
+
+            <div class="form-field" style="margin-top:1rem"><label class="form-label">Recent achievements</label>
+                <textarea class="quick-sql" readonly>SELECT player_name, achievement_type, points, season, timestamp, notes
+FROM achievements ORDER BY timestamp DESC LIMIT 20;</textarea></div>
+
+            <div class="form-field" style="margin-top:1rem"><label class="form-label">Update season end date</label>
+                <textarea class="quick-sql" readonly>UPDATE seasons SET end_date = '2025-07-15 17:00:00', next_season_start = '2025-07-15 17:00:00' WHERE slug = 'season-10';</textarea></div>
+
+            <div class="form-field" style="margin-top:1rem"><label class="form-label">Delete achievement by ID</label>
+                <textarea class="quick-sql" readonly>DELETE FROM achievements WHERE id = 1;</textarea></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   Admin Panel Script
+════════════════════════════════════════════════════════════════ */
+const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:8787/api'
+    : 'https://diablo4-hof.thomasrobb5.workers.dev/api';
+
+const POINT_MAP = {
+    'legendary-item':1,'ancestral-legendary':1,'unique-item':1,'ancestral-unique':1,
+    'ancestral-legendary-2ga':1,'ancestral-unique-2ga':1,'chaos-unique-1ga':1,'any-1ga-item':1,
+    'ancestral-unique-3ga':2,'ancestral-legendary-3ga':2,'mythic-1ga':2,'mythic-no-cache':2,
+    'mythic-2ga':2,'chaos-unique-2ga':2,'grandpapa-bonus':2,
+    'mythic-3ga':3,'ancestral-unique-4ga':3,'mythic-4ga':3,'chaos-unique-3ga':3,
+};
+const RARITY_MAP = {
+    'legendary-item':'legendary','ancestral-legendary':'ancestral','unique-item':'unique',
+    'ancestral-unique':'ancestral','ancestral-legendary-2ga':'ancestral','ancestral-unique-2ga':'ancestral',
+    'chaos-unique-1ga':'chaos','any-1ga-item':'legendary','ancestral-unique-3ga':'ancestral',
+    'ancestral-legendary-3ga':'ancestral','mythic-1ga':'mythic','mythic-no-cache':'mythic',
+    'mythic-2ga':'mythic','chaos-unique-2ga':'chaos','grandpapa-bonus':'unique',
+    'mythic-3ga':'mythic','ancestral-unique-4ga':'ancestral','mythic-4ga':'mythic','chaos-unique-3ga':'chaos',
+};
+
+let allData = { players: [], achievements: [], seasons: [] };
+
+/* Helpers */
+const $ = id => document.getElementById(id);
+function showStatus(id, type, msg) {
+    const el = $(id); if(!el) return;
+    el.className = 'status-msg ' + type; el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display='none'; }, 6000);
+}
+
+/* ── Load Data ── */
+async function loadData() {
+    try {
+        const res = await fetch(`${API_URL}/data`);
+        if(!res.ok) throw new Error('API error');
+        allData = await res.json();
+        updateStats();
+        populatePlayers();
+        populateSeasons();
+        renderPlayersTable();
+        renderHistoryTable();
+        initSetupWizard();
+
+        const badge = $('apiStatusBadge');
+        badge.className = 'api-status ok';
+        badge.innerHTML = '<div class="api-dot"></div> API online';
+    } catch {
+        const badge = $('apiStatusBadge');
+        badge.className = 'api-status fail';
+        badge.innerHTML = '<div class="api-dot"></div> API offline';
+    }
+}
+
+function updateStats() {
+    const pts = allData.achievements.reduce((s,a) => s+(a.points||0), 0);
+    $('stat-players').textContent      = allData.players.length;
+    $('stat-achievements').textContent = allData.achievements.length;
+    $('stat-seasons').textContent      = allData.seasons.length;
+    $('stat-points').textContent       = pts;
+}
+
+function populatePlayers() {
+    const sel = $('ach-player');
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Select Player —</option>';
+    allData.players.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.id; o.textContent = `${p.name}${p.class ? ` (${p.class})` : ''}`;
+        if (String(p.id) === cur) o.selected = true;
+        sel.appendChild(o);
+    });
+}
+
+function populateSeasons() {
+    ['ach-season','us-season','setup-season-select'].forEach(id => {
+        const sel = $(id); if(!sel) return;
+        const cur = sel.value;
+        sel.innerHTML = '';
+        allData.seasons
+            .filter(s => s.status !== 'upcoming' || id !== 'ach-season')
+            .forEach(s => {
+                const o = document.createElement('option');
+                o.value = id === 'setup-season-select' ? String(s.id) : (s.slug || s.id);
+                o.textContent = `Season ${s.number} — ${s.name} (${s.status})`;
+                if (s.status === 'active' || o.value === cur) o.selected = true;
+                sel.appendChild(o);
+            });
+    });
+}
+
+/* Update achievement-type dropdown with custom challenges for selected season */
+function updateAchTypeForSeason() {
+    const sel     = $('ach-season');
+    const typeSel = $('ach-type');
+    if (!sel || !typeSel) return;
+
+    // Remove any previously-injected custom optgroup
+    const existing = typeSel.querySelector('optgroup[data-custom]');
+    if (existing) existing.remove();
+
+    const slug   = sel.value;
+    const season = allData.seasons.find(s => (s.slug || String(s.id)) === slug);
+    if (!season?.challenges_config) return;
+
+    const customs = season.challenges_config.filter(c => c.custom && c.active !== false);
+    if (customs.length === 0) return;
+
+    const group = document.createElement('optgroup');
+    group.label = '── Custom Challenges ──';
+    group.setAttribute('data-custom', '1');
+    customs.forEach(c => {
+        const o = document.createElement('option');
+        o.value       = c.type;
+        o.textContent = `${c.name} (${c.pts}pt${c.pts !== 1 ? 's' : ''})`;
+        group.appendChild(o);
+    });
+    typeSel.appendChild(group);
+}
+
+function renderPlayersTable() {
+    const tbody = $('playersTableBody');
+    if (!tbody) return;
+    if (!allData.players.length) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);text-align:center">No players found</td></tr>'; return; }
+    tbody.innerHTML = '';
+    allData.players.forEach(p => {
+        // Main row
+        const row = document.createElement('tr');
+        row.id = `prow-${p.id}`;
+        row.innerHTML = `
+            <td>${p.id}</td>
+            <td style="color:var(--text-bright);font-weight:600">${p.name}</td>
+            <td>${p.class||'—'}</td>
+            <td style="color:var(--ash-silver)">${p.discord_id||'—'}</td>
+            <td>
+                <button class="btn btn-danger" style="margin-right:0.4rem" onclick="toggleEditRow(${p.id})">Edit</button>
+                <button class="btn btn-danger" onclick="deletePlayer(${p.id},'${p.name}')">Delete</button>
+            </td>`;
+        tbody.appendChild(row);
+
+        // Hidden edit row
+        const editRow = document.createElement('tr');
+        editRow.id = `pedit-${p.id}`;
+        editRow.style.display = 'none';
+        editRow.innerHTML = `
+            <td colspan="6" style="padding:0.75rem 1rem;background:rgba(139,0,0,0.07)">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.75rem;align-items:end">
+                    <div class="form-field">
+                        <label class="form-label">Name</label>
+                        <input class="form-input" id="pe-name-${p.id}" value="${p.name}" placeholder="Player name">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Class</label>
+                        <select class="form-select" id="pe-class-${p.id}">
+                            <option value="Unknown" ${p.class==='Unknown'?'selected':''}>Unknown</option>
+                            <option value="Barbarian" ${p.class==='Barbarian'?'selected':''}>Barbarian</option>
+                            <option value="Druid" ${p.class==='Druid'?'selected':''}>Druid</option>
+                            <option value="Necromancer" ${p.class==='Necromancer'?'selected':''}>Necromancer</option>
+                            <option value="Rogue" ${p.class==='Rogue'?'selected':''}>Rogue</option>
+                            <option value="Sorcerer" ${p.class==='Sorcerer'?'selected':''}>Sorcerer</option>
+                            <option value="Spiritborn" ${p.class==='Spiritborn'?'selected':''}>Spiritborn</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Discord ID</label>
+                        <input class="form-input" id="pe-discord-${p.id}" value="${p.discord_id||''}" placeholder="@username or ID">
+                    </div>
+                    <button class="btn btn-primary" style="height:fit-content" onclick="savePlayerEdit(${p.id})">Save</button>
+                </div>
+                <div id="pe-status-${p.id}" class="status-msg" style="margin-top:0.5rem"></div>
+            </td>`;
+        tbody.appendChild(editRow);
+    });
+}
+
+function toggleEditRow(id) {
+    const row = $(`pedit-${id}`);
+    if (!row) return;
+    row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+
+async function savePlayerEdit(id) {
+    const name       = $(`pe-name-${id}`)?.value?.trim();
+    const cls        = $(`pe-class-${id}`)?.value;
+    const discord_id = $(`pe-discord-${id}`)?.value?.trim() || null;
+    const pw         = $('adminPw')?.value || prompt('Admin password:');
+    if (!pw) return;
+    if (!name) { showStatus(`pe-status-${id}`, 'error', 'Name is required'); return; }
+
+    try {
+        const res = await fetch(`${API_URL}/players/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'X-Admin-Password': pw },
+            body: JSON.stringify({ name, class: cls, discord_id }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showStatus(`pe-status-${id}`, 'success', '✓ Player updated');
+            await loadData();
+        } else {
+            showStatus(`pe-status-${id}`, 'error', data.error || 'Update failed');
+        }
+    } catch {
+        showStatus(`pe-status-${id}`, 'error', 'Network error');
+    }
+}
+
+
+function renderHistoryTable() {
+    const tbody = $('historyTableBody');
+    if (!tbody) return;
+    const sorted = [...allData.achievements].sort((a,b) => new Date(b.timestamp)-new Date(a.timestamp)).slice(0,50);
+    if (!sorted.length) { tbody.innerHTML = '<tr><td colspan="7" style="color:var(--text-dim);text-align:center">No achievements found</td></tr>'; return; }
+    tbody.innerHTML = '';
+    sorted.forEach(ach => {
+        const rarity = RARITY_MAP[ach.type] || 'legendary';
+        const pts    = POINT_MAP[ach.type] || ach.points || '?';
+        const date   = new Date(ach.timestamp).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="color:var(--text-bright);font-weight:600">${ach.playerName}</td>
+            <td>${ach.type}</td>
+            <td><span class="rarity-pip rarity-${rarity}"></span>${rarity}</td>
+            <td style="color:#c9a84c;font-weight:700">${pts}</td>
+            <td>${ach.season}</td>
+            <td>${date}</td>
+            <td><button class="btn btn-danger" onclick="deleteAchievement(${ach.id})">Delete</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/* ── Achievement Form ── */
+document.addEventListener('DOMContentLoaded', () => {
+    const now  = new Date();
+    const pad  = n => String(n).padStart(2,'0');
+    const local = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    $('ach-timestamp').value = local;
+
+    loadData();
+    setupTabs();
+    setupForms();
+});
+
+function setupTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            const pane = $(btn.dataset.tab);
+            if (pane) pane.classList.add('active');
+        });
+    });
+}
+
+function setupForms() {
+    $('achievementForm')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const playerId = parseInt($('ach-player').value);
+        const achievementType = $('ach-type').value;
+        const season = $('ach-season').value;
+        const timestamp = new Date($('ach-timestamp').value).toISOString();
+        const notes = $('ach-notes').value.trim() || null;
+        const pw    = $('adminPw').value;
+
+        if (!playerId || !achievementType || !season) { showStatus('achStatus','error','All fields required.'); return; }
+
+        // For custom challenge types, look up the point value from the season config
+        const seasonObj = allData.seasons.find(s => (s.slug || String(s.id)) === season);
+        const customCfg = seasonObj?.challenges_config?.find?.(c => c.type === achievementType && c.custom);
+        const payload = { playerId, achievementType, season, timestamp, notes };
+        if (customCfg) payload.points = customCfg.pts;
+
+        const btn = $('achSubmitBtn');
+        btn.disabled = true; btn.textContent = 'Recording…';
+        try {
+            const res = await fetch(`${API_URL}/achievements`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-Admin-Password':pw},
+                body: JSON.stringify(payload)
+            });
+            const body = await res.json();
+            if (res.ok) {
+                showStatus('achStatus','success',`✅ Achievement recorded! ID: ${body.achievementId}`);
+                $('achievementForm').reset();
+                $('ach-timestamp').value = new Date().toISOString().slice(0,16);
+                loadData();
+            } else {
+                showStatus('achStatus','error', body.error || `Error ${res.status}`);
+            }
+        } catch (err) { showStatus('achStatus','error', err.message); }
+        finally { btn.disabled = false; btn.textContent = '⚡ Record & Notify Discord'; }
+    });
+
+    $('playerForm')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const pw = $('p-pw').value;
+        try {
+            const res = await fetch(`${API_URL}/players`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-Admin-Password':pw},
+                body: JSON.stringify({ name: $('p-name').value, class: $('p-class').value, discord_id: $('p-discord').value||null })
+            });
+            const body = await res.json();
+            if (res.ok) { showStatus('playerStatus','success',`✅ Player added (ID ${body.id})`); $('playerForm').reset(); loadData(); }
+            else        { showStatus('playerStatus','error', body.error || `Error ${res.status}`); }
+        } catch (err) { showStatus('playerStatus','error', err.message); }
+    });
+
+    $('seasonForm')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const pw = $('s-pw').value;
+        const payload = {
+            number: parseInt($('s-number').value),
+            name:   $('s-name').value,
+            slug:   $('s-slug').value,
+            status: $('s-status').value,
+            start_date: $('s-start').value ? new Date($('s-start').value).toISOString() : null,
+            end_date:   $('s-end').value   ? new Date($('s-end').value).toISOString()   : null,
+        };
+        try {
+            const res = await fetch(`${API_URL}/seasons`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-Admin-Password':pw},
+                body: JSON.stringify(payload)
+            });
+            const body = await res.json();
+            if (res.ok) { showStatus('seasonStatus','success',`✅ Season created (ID ${body.id})`); $('seasonForm').reset(); loadData(); }
+            else        { showStatus('seasonStatus','error', body.error || `Error ${res.status}`); }
+        } catch (err) { showStatus('seasonStatus','error', err.message); }
+    });
+
+    $('updateSeasonForm')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const pw  = $('us-pw').value;
+        const sel = $('us-season');
+        const seasonObj = allData.seasons.find(s => (s.slug||String(s.id)) === sel.value);
+        if (!seasonObj) { showStatus('updateSeasonStatus','error','Season not found'); return; }
+        const payload = {
+            status:   $('us-status').value,
+            end_date: $('us-end').value ? new Date($('us-end').value).toISOString() : undefined,
+        };
+        try {
+            const res = await fetch(`${API_URL}/seasons/${seasonObj.id}`, {
+                method: 'PATCH',
+                headers: {'Content-Type':'application/json','X-Admin-Password':pw},
+                body: JSON.stringify(payload)
+            });
+            const body = await res.json();
+            if (res.ok) { showStatus('updateSeasonStatus','success','✅ Season updated!'); loadData(); }
+            else        { showStatus('updateSeasonStatus','error', body.error || `Error ${res.status}`); }
+        } catch (err) { showStatus('updateSeasonStatus','error', err.message); }
+    });
+}
+
+async function deletePlayer(id, name) {
+    if (!confirm(`Delete player "${name}"? This will NOT delete their achievements.`)) return;
+    const pw = prompt('Admin password:');
+    if (!pw) return;
+    try {
+        const res = await fetch(`${API_URL}/players/${id}`, { method:'DELETE', headers:{'X-Admin-Password':pw} });
+        if (res.ok) { alert('Player deleted.'); loadData(); }
+        else        { alert((await res.json()).error || 'Error deleting player.'); }
+    } catch (e) { alert(e.message); }
+}
+
+async function deleteAchievement(id) {
+    if (!confirm(`Delete achievement ID ${id}? This cannot be undone.`)) return;
+    const pw = prompt('Admin password:');
+    if (!pw) return;
+    try {
+        const res = await fetch(`${API_URL}/achievements/${id}`, { method:'DELETE', headers:{'X-Admin-Password':pw} });
+        if (res.ok) { loadData(); }
+        else        { alert((await res.json()).error || 'Error deleting achievement.'); }
+    } catch (e) { alert(e.message); }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SEASON SETUP WIZARD
+════════════════════════════════════════════════════════════════ */
+
+// Full challenge definitions with default points
+const ALL_CHALLENGES = [
+    { tier: '1 Point', items: [
+        { type:'legendary-item',          name:'Legendary Item',            pts:1 },
+        { type:'ancestral-legendary',     name:'Ancestral Legendary',       pts:1 },
+        { type:'unique-item',             name:'Unique Item',               pts:1 },
+        { type:'ancestral-unique',        name:'Ancestral Unique',          pts:1 },
+        { type:'ancestral-legendary-2ga', name:'Ancestral Legendary (2GA)', pts:1 },
+        { type:'ancestral-unique-2ga',    name:'Ancestral Unique (2GA)',    pts:1 },
+        { type:'chaos-unique-1ga',        name:'Chaos Unique (1GA)',        pts:1 },
+        { type:'any-1ga-item',            name:'Any 1GA Item',              pts:1 },
+    ]},
+    { tier: '2 Points', items: [
+        { type:'ancestral-unique-3ga',    name:'Ancestral Unique (3GA)',    pts:2 },
+        { type:'ancestral-legendary-3ga', name:'Ancestral Legendary (3GA)', pts:2 },
+        { type:'mythic-no-cache',         name:'Mythic (No Cache)',         pts:2 },
+        { type:'mythic-1ga',              name:'Mythic Item (1GA)',         pts:2 },
+        { type:'mythic-2ga',              name:'Mythic Item (2GA)',         pts:2 },
+        { type:'chaos-unique-2ga',        name:'Chaos Unique (2GA)',        pts:2 },
+        { type:'grandpapa-bonus',         name:'Grandpapa Bonus',           pts:2 },
+    ]},
+    { tier: '3 Points', items: [
+        { type:'mythic-3ga',              name:'Mythic Item (3GA)',         pts:3 },
+        { type:'ancestral-unique-4ga',    name:'Ancestral Unique (4GA)',    pts:3 },
+        { type:'mythic-4ga',              name:'Mythic Item (4GA)',         pts:3 },
+        { type:'chaos-unique-3ga',        name:'Chaos Unique (3GA)',        pts:3 },
+    ]},
+];
+
+let _setupMode = 'new'; // 'new' | 'edit'
+let _customChallenges = []; // { type, name, pts, custom:true }
+
+function initSetupWizard() {
+    renderChallengeConfigurator(null);
+    _customChallenges = [];
+    renderCustomChallengeList();
+    setSetupMode('new');
+}
+
+function setSetupMode(mode) {
+    _setupMode = mode;
+    $('setup-edit-row').style.display = mode === 'edit' ? '' : 'none';
+
+    if (mode === 'new') {
+        ['ss-number','ss-name','ss-slug','ss-start','ss-end'].forEach(id => { const el = $(id); if(el) el.value = ''; });
+        const statusEl = $('ss-status'); if(statusEl) statusEl.value = 'upcoming';
+        _customChallenges = [];
+        renderCustomChallengeList();
+        renderChallengeConfigurator(null);
+    } else {
+        loadSeasonIntoSetup();
+    }
+}
+
+function loadSeasonIntoSetup() {
+    const sel = $('setup-season-select');
+    if (!sel || !sel.value) return;
+    const season = allData.seasons.find(s => String(s.id) === sel.value);
+    if (!season) return;
+
+    const toLocalDT = (dt) => {
+        if (!dt) return '';
+        return new Date(dt).toISOString().slice(0,16);
+    };
+    $('ss-number').value = season.number || '';
+    $('ss-name').value   = season.name   || '';
+    $('ss-slug').value   = season.slug   || '';
+    const st = $('ss-status'); if(st) st.value = season.status || 'upcoming';
+    $('ss-start').value  = toLocalDT(season.start_date || season.next_season_start);
+    $('ss-end').value    = toLocalDT(season.end_date);
+
+    // Restore custom challenges (those with custom:true) from saved config
+    const cfg = season.challenges_config;
+    _customChallenges = (Array.isArray(cfg) ? cfg.filter(c => c.custom) : []);
+    renderCustomChallengeList();
+    renderChallengeConfigurator(cfg);
+}
+
+function renderChallengeConfigurator(config) {
+    // config = array of { type, name, pts, active } or null
+    const cfg = {};
+    if (config && Array.isArray(config)) {
+        config.forEach(c => { cfg[c.type] = c; });
+    }
+
+    const container = $('challengeConfigurator');
+    if (!container) return;
+
+    let html = '';
+    for (const tier of ALL_CHALLENGES) {
+        html += `<div class="challenge-tier-hdr">${tier.tier}</div><div class="challenge-grid">`;
+        for (const item of tier.items) {
+            const saved   = cfg[item.type];
+            const active  = saved ? saved.active !== false : true; // default enabled
+            const pts     = saved ? saved.pts : item.pts;
+            html += `
+            <div class="challenge-row ${active ? 'active' : ''}" id="crow-${item.type}">
+                <input type="checkbox" class="challenge-toggle" id="ctog-${item.type}"
+                    ${active ? 'checked' : ''}
+                    onchange="toggleChallenge('${item.type}')">
+                <label class="challenge-name" for="ctog-${item.type}">${item.name}</label>
+                <input type="number" class="challenge-pts-input" id="cpts-${item.type}"
+                    value="${pts}" min="1" max="10" title="Point value">
+                <span class="challenge-pts-label">pts</span>
+            </div>`;
+        }
+        html += `</div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+function toggleChallenge(type) {
+    const chk = $(`ctog-${type}`);
+    const row = $(`crow-${type}`);
+    if (!chk || !row) return;
+    row.classList.toggle('active', chk.checked);
+}
+
+function setAllChallenges(enabled) {
+    for (const tier of ALL_CHALLENGES) {
+        for (const item of tier.items) {
+            const chk = $(`ctog-${item.type}`);
+            const row = $(`crow-${item.type}`);
+            if (chk) chk.checked = enabled;
+            if (row) row.classList.toggle('active', enabled);
+        }
+    }
+}
+
+function buildChallengesConfig() {
+    const config = [];
+    // Standard challenges from the grid
+    for (const tier of ALL_CHALLENGES) {
+        for (const item of tier.items) {
+            const chk = $(`ctog-${item.type}`);
+            const pts = $(`cpts-${item.type}`);
+            config.push({
+                type:   item.type,
+                name:   item.name,
+                pts:    pts ? parseInt(pts.value) || item.pts : item.pts,
+                active: chk ? chk.checked : true,
+            });
+        }
+    }
+    // Append custom challenges
+    _customChallenges.forEach(c => config.push({ ...c, active: true }));
+    return config;
+}
+
+/* Custom challenge helpers */
+function addCustomChallenge() {
+    const nameEl = $('custom-ch-name');
+    const ptsEl  = $('custom-ch-pts');
+    const name   = nameEl?.value?.trim();
+    const pts    = parseInt(ptsEl?.value) || 1;
+    if (!name) { alert('Please enter a challenge name'); return; }
+
+    // Generate a type slug from the name
+    const type = 'custom-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (_customChallenges.find(c => c.type === type)) { alert('A custom challenge with a very similar name already exists'); return; }
+
+    _customChallenges.push({ type, name, pts, custom: true });
+    nameEl.value = '';
+    ptsEl.value  = '1';
+    renderCustomChallengeList();
+}
+
+function removeCustomChallenge(type) {
+    _customChallenges = _customChallenges.filter(c => c.type !== type);
+    renderCustomChallengeList();
+}
+
+function renderCustomChallengeList() {
+    const container = $('customChallengeList');
+    if (!container) return;
+    if (_customChallenges.length === 0) {
+        container.innerHTML = '<span style="font-size:0.72rem;color:var(--text-dim);font-style:italic">No custom challenges added yet</span>';
+        return;
+    }
+    container.innerHTML = _customChallenges.map(c => `
+        <div style="display:inline-flex;align-items:center;gap:0.4rem;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:20px;padding:0.3rem 0.7rem;font-size:0.72rem">
+            <span style="color:var(--admin-gold)">${c.name}</span>
+            <span style="color:var(--text-dim)">${c.pts}pt${c.pts !== 1 ? 's' : ''}</span>
+            <button onclick="removeCustomChallenge('${c.type}')" style="background:none;border:none;color:#f87171;cursor:pointer;padding:0;font-size:0.85rem;line-height:1" title="Remove">&times;</button>
+        </div>
+    `).join('');
+}
+
+async function saveSeasonSetup() {
+    const pw = $('ss-pw')?.value?.trim();
+    if (!pw) { showStatus('setupStatus','error','Admin password is required'); return; }
+
+    const number = parseInt($('ss-number')?.value);
+    const name   = $('ss-name')?.value?.trim();
+    const slug   = $('ss-slug')?.value?.trim().toLowerCase().replace(/\s+/g,'-');
+    const status = $('ss-status')?.value || 'upcoming';
+    const start  = $('ss-start')?.value || null;
+    const end    = $('ss-end')?.value   || null;
+    const challenges_config = buildChallengesConfig();
+
+    if (!name)   { showStatus('setupStatus','error','Season name is required'); return; }
+    if (!number) { showStatus('setupStatus','error','Season number is required'); return; }
+
+    const body = { number, name, slug: slug||`season-${number}`, status, challenges_config };
+    if (start) {
+        body.start_date = start;
+        body.next_season_start = start;
+    }
+    if (end) body.end_date = end;
+
+    const headers = { 'Content-Type':'application/json', 'X-Admin-Password': pw };
+
+    try {
+        let res, data;
+        if (_setupMode === 'edit') {
+            const id = $('setup-season-select')?.value;
+            if (!id) { showStatus('setupStatus','error','Select a season to edit'); return; }
+            res  = await fetch(`${API_URL}/seasons/${id}`, { method:'PATCH', headers, body: JSON.stringify(body) });
+        } else {
+            res  = await fetch(`${API_URL}/seasons`,    { method:'POST',  headers, body: JSON.stringify(body) });
+        }
+        data = await res.json();
+        if (res.ok) {
+            showStatus('setupStatus','success',`✓ Season "${name}" ${_setupMode === 'edit' ? 'updated' : 'created'} successfully!`);
+            await loadData();
+        } else {
+            showStatus('setupStatus','error', data.error || 'Save failed');
+        }
+    } catch (e) {
+        showStatus('setupStatus','error','Network error: ' + e.message);
+    }
+}
+</script>
+</body>
+</html>

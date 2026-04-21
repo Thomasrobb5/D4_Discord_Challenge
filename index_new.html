@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diablo IV - Hall of Fame</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- PARTICLE BACKGROUND -->
+    <div class="particle-container" id="particleContainer"></div>
+    
+    <!-- LANDING SCREEN -->
+    <div id="landingScreen" class="landing-screen active">
+        <div class="landing-content">
+            <div class="landing-header">
+                <h1 class="landing-title">⚡ DIABLO IV ⚡</h1>
+                <p class="landing-subtitle">Hall of Fame</p>
+                <p class="landing-tagline">Conquer. Compete. Claim Glory.</p>
+            </div>
+
+            <div class="seasons-selector">
+                <h2 class="selector-title">SELECT YOUR SEASON</h2>
+                <div class="seasons-grid" id="seasonsGrid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="landing-footer">
+                <p>Choose a season to view the Hall of Fame and Leaderboard</p>
+            </div>
+        </div>
+
+        <!-- Demonic decorative elements -->
+        <div class="demonic-corner top-left"></div>
+        <div class="demonic-corner top-right"></div>
+        <div class="demonic-corner bottom-left"></div>
+        <div class="demonic-corner bottom-right"></div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="hidden">
+        <header class="header">
+            <div class="header-content">
+                <button class="back-btn" id="backBtn" title="Back to Season Select">
+                    <span class="back-icon">←</span> SEASONS
+                </button>
+                <div class="logo-section">
+                    <h1 class="title" id="seasonTitle">DIABLO IV</h1>
+                    <p class="subtitle" id="seasonSubtitle">Hall of Fame</p>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn active" data-tab="leaderboard">🏆 Leaderboard</button>
+                    <button class="nav-btn" data-tab="achievements">🎖️ Achievements</button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- LEADERBOARD TAB -->
+            <section id="leaderboard" class="tab-content active">
+                <div class="section-header">
+                    <h2>🏆 Leaderboard</h2>
+                    <p class="section-subtitle">Ranking by conquest points earned</p>
+                </div>
+                
+                <div class="leaderboard-controls">
+                    <input type="text" id="playerSearch" class="search-input" placeholder="🔍 Search player...">
+                </div>
+
+                <div class="leaderboard-container">
+                    <div class="leaderboard-header">
+                        <div class="rank-col">RANK</div>
+                        <div class="player-col">PLAYER</div>
+                        <div class="points-col">POINTS</div>
+                        <div class="achievements-col">ACHIEVEMENTS</div>
+                    </div>
+                    <div id="leaderboardList" class="leaderboard-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ACHIEVEMENTS TAB -->
+            <section id="achievements" class="tab-content">
+                <div class="section-header">
+                    <h2>🎖️ Achievement Gallery</h2>
+                    <p class="section-subtitle">All recorded firsts and legendary moments</p>
+                </div>
+
+                <div class="achievement-controls">
+                    <input type="text" id="achievementSearch" class="search-input" placeholder="🔍 Search achievement...">
+                    <select id="pointsFilter" class="filter-select">
+                        <option value="">All Points</option>
+                        <option value="1">1 Point</option>
+                        <option value="2">2 Points</option>
+                        <option value="3">3 Points</option>
+                        <option value="5">5 Points (Bonus)</option>
+                    </select>
+                    <select id="rarity-filter" class="filter-select">
+                        <option value="">All Rarities</option>
+                        <option value="legendary">Legendary</option>
+                        <option value="ancestral">Ancestral</option>
+                        <option value="unique">Unique</option>
+                        <option value="mythic">Mythic</option>
+                        <option value="chaos">Chaos</option>
+                    </select>
+                </div>
+
+                <div id="achievementGrid" class="achievement-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+        </main>
+
+        <!-- MODAL FOR ACHIEVEMENT DETAILS -->
+        <div id="achievementModal" class="modal">
+            <div class="modal-content">
+                <button class="modal-close">&times;</button>
+                <div id="modalBody" class="modal-body">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Conquer the darkness. Claim your glory. Season awaits. ⚔️</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

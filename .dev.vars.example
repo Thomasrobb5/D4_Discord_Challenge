@@ -1,0 +1,11 @@
+# Local development secrets for Cloudflare Worker (wrangler dev)
+# This file is gitignored — NEVER commit it to version control!
+#
+# Copy this file to .dev.vars and fill in your real values.
+
+# Discord webhook URL (from Server Settings → Integrations → Webhooks)
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
+
+# Admin password — used to protect POST/DELETE API endpoints
+# Must match what you enter in the site's admin unlock prompt
+ADMIN_PASSWORD=diablo4admin
