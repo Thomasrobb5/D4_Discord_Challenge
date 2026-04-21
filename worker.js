@@ -393,7 +393,7 @@ async function handleCreateAchievement(request, env) {
     if (points === undefined || isNaN(points)) return err(`Unknown achievement type: ${achievementType}`);
 
     const player = await env.DB.prepare(
-        'SELECT id, name FROM players WHERE id = ?'
+        'SELECT id, name, discord_id FROM players WHERE id = ?'
     ).bind(playerId).first();
     if (!player) return err('Player not found', 404);
 
@@ -405,8 +405,9 @@ async function handleCreateAchievement(request, env) {
     `).bind(player.id, player.name, achievementType, points, season, notes || null, ts).run();
 
     const seasonInfo = await env.DB.prepare('SELECT name FROM seasons WHERE slug = ?').bind(season).first();
-    fireDiscordWebhook(env, {
+    fireAchievementNotification(env, {
         playerName:      player.name,
+        discordId:       player.discord_id,
         achievementType,
         points,
         seasonName:      seasonInfo?.name || season,
@@ -458,7 +459,7 @@ async function handleClaimAchievement(request, env, origin) {
     if (points === undefined || isNaN(points)) return err(`Unknown achievement type: ${achievementType}`);
 
     const player = await env.DB.prepare(
-        'SELECT id, name FROM players WHERE id = ?'
+        'SELECT id, name, discord_id FROM players WHERE id = ?'
     ).bind(playerId).first();
     if (!player) return err('Player not found', 404);
 
@@ -477,11 +478,14 @@ async function handleClaimAchievement(request, env, origin) {
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `).bind(player.id, player.name, achievementType, points, season, notes || null, ts).run();
 
-    // Fire Discord webhook
+    // Fire Discord webhook with @mention
     const seasonRow = await env.DB.prepare('SELECT name FROM seasons WHERE slug = ?').bind(season).first();
-    fireDiscordWebhook(env, {
-        playerName: player.name, achievementType, points,
-        seasonName: seasonRow?.name || season, timestamp: ts, notes,
+    fireAchievementNotification(env, {
+        playerName:      player.name,
+        discordId:       player.discord_id,
+        achievementType, points,
+        seasonName:      seasonRow?.name || season,
+        timestamp:       ts, notes,
     }).catch(e => console.error('Discord webhook failed:', e));
 
     return json({ success: true, achievementId: res.meta.last_row_id, points }, 201,
@@ -549,6 +553,14 @@ async function handleUpdateSeason(id, request, env) {
         `UPDATE seasons SET ${sets.join(', ')} WHERE id = ?`
     ).bind(...vals).run();
 
+    // If season is being set to active, fire a season-start Discord announcement
+    if (body.status === 'active' && existing.status !== 'active') {
+        const updated = await env.DB.prepare('SELECT * FROM seasons WHERE id = ?').bind(id).first();
+        const players = await env.DB.prepare('SELECT name, discord_id FROM players ORDER BY name').all();
+        fireSeasonStartNotification(env, updated, players.results || [])
+            .catch(e => console.error('Season start Discord notification failed:', e));
+    }
+
     return json({ success: true });
 }
 
@@ -564,41 +576,50 @@ async function handleDiscordWebhook(request, env) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// DISCORD HELPER
+// DISCORD HELPERS
 // ════════════════════════════════════════════════════════════════
-async function fireDiscordWebhook(env, data) {
-    if (!env.DISCORD_WEBHOOK_URL) {
-        console.warn('DISCORD_WEBHOOK_URL not set — skipping notification');
-        return;
-    }
 
-    const { playerName, achievementType, points, seasonName, timestamp, notes } = data;
+const ACHIEVEMENT_NAMES = {
+    'legendary-item':         'Legendary Item',
+    'ancestral-legendary':    'Ancestral Legendary',
+    'unique-item':            'Unique Item',
+    'ancestral-unique':       'Ancestral Unique',
+    'ancestral-legendary-2ga':'Ancestral Legendary (2GA)',
+    'ancestral-unique-2ga':   'Ancestral Unique (2GA)',
+    'chaos-unique-1ga':       'Chaos Unique (1GA)',
+    'any-1ga-item':           'Any 1GA Item',
+    'ancestral-unique-3ga':   'Ancestral Unique (3GA)',
+    'ancestral-legendary-3ga':'Ancestral Legendary (3GA)',
+    'mythic-1ga':             'Mythic Item (1GA)',
+    'mythic-no-cache':        'Mythic (No Cache)',
+    'mythic-2ga':             'Mythic Item (2GA)',
+    'chaos-unique-2ga':       'Chaos Unique (2GA)',
+    'grandpapa-bonus':        'Grandpapa Bonus',
+    'mythic-3ga':             'Mythic Item (3GA)',
+    'ancestral-unique-4ga':   'Ancestral Unique (4GA)',
+    'mythic-4ga':             'Mythic Item (4GA)',
+    'chaos-unique-3ga':       'Chaos Unique (3GA)',
+};
 
-    const ACHIEVEMENT_NAMES = {
-        'legendary-item':         'Legendary Item',
-        'ancestral-legendary':    'Ancestral Legendary',
-        'unique-item':            'Unique Item',
-        'ancestral-unique':       'Ancestral Unique',
-        'ancestral-legendary-2ga':'Ancestral Legendary (2GA)',
-        'ancestral-unique-2ga':   'Ancestral Unique (2GA)',
-        'chaos-unique-1ga':       'Chaos Unique (1GA)',
-        'any-1ga-item':           'Any 1GA Item',
-        'ancestral-unique-3ga':   'Ancestral Unique (3GA)',
-        'ancestral-legendary-3ga':'Ancestral Legendary (3GA)',
-        'mythic-1ga':             'Mythic Item (1GA)',
-        'mythic-no-cache':        'Mythic (No Cache)',
-        'mythic-2ga':             'Mythic Item (2GA)',
-        'chaos-unique-2ga':       'Chaos Unique (2GA)',
-        'grandpapa-bonus':        'Grandpapa Bonus',
-        'mythic-3ga':             'Mythic Item (3GA)',
-        'ancestral-unique-4ga':   'Ancestral Unique (4GA)',
-        'mythic-4ga':             'Mythic Item (4GA)',
-        'chaos-unique-3ga':       'Chaos Unique (3GA)',
-    };
+const ACHIEVEMENT_ICONS = {
+    legendary: '🪙', ancestral: '⚔️', unique: '👑', mythic: '✨', chaos: '🌀',
+};
 
-    const ACHIEVEMENT_ICONS = {
-        legendary: '🪙', ancestral: '⚔️', unique: '👑', mythic: '✨', chaos: '🌀',
-    };
+/* Low-level: POST any payload to the Discord webhook */
+async function postToDiscord(env, payload) {
+    const url = env.DISCORD_WEBHOOK_URL;
+    if (!url) { console.warn('DISCORD_WEBHOOK_URL not set — skipping'); return; }
+    const res = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+    });
+    if (!res.ok) console.error('Discord responded', res.status, await res.text());
+}
+
+/* --- ACHIEVEMENT NOTIFICATION --- */
+async function fireAchievementNotification(env, data) {
+    const { playerName, discordId, achievementType, points, seasonName, timestamp, notes } = data;
 
     const rarity     = RARITY_MAP[achievementType] || 'legendary';
     const color      = RARITY_COLORS[rarity] || 0xC9A84C;
@@ -607,32 +628,85 @@ async function fireDiscordWebhook(env, data) {
     const ptStr      = points === 1 ? '🪙 1 Point' : `🪙 ${points} Points`;
     const rarityName = rarity.charAt(0).toUpperCase() + rarity.slice(1);
     const dateStr    = timestamp
-        ? new Date(timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        ? new Date(timestamp).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
         : 'Just now';
+
+    // @mention if we have a discord_id, otherwise bold name
+    const mention = discordId ? `<@${discordId}>` : `**${playerName}**`;
 
     const embed = {
         title:       `${icon} Achievement Unlocked — ${achName}`,
-        description: `**${playerName}** has claimed a new achievement in **${seasonName || 'current season'}**!`,
+        description: `${mention} has claimed a new achievement in **${seasonName || 'current season'}**! 🎉`,
         color,
         fields: [
-            { name: 'Rarity',    value: rarityName, inline: true },
-            { name: 'Points',    value: ptStr,       inline: true },
-            { name: 'Season',    value: seasonName || '—', inline: true },
-            { name: 'Claimed',   value: dateStr,     inline: true },
+            { name: 'Rarity',   value: rarityName,      inline: true },
+            { name: 'Points',   value: ptStr,           inline: true },
+            { name: 'Season',   value: seasonName||'—', inline: true },
+            { name: 'Claimed',  value: dateStr,         inline: true },
         ],
-        footer: {
-            text: 'Diablo IV — Hall of Legends',
-        },
+        footer:    { text: 'Diablo IV — Hall of Legends' },
         timestamp: timestamp || new Date().toISOString(),
     };
+    if (notes) embed.fields.push({ name: 'Notes', value: notes, inline: false });
 
-    if (notes) {
-        embed.fields.push({ name: 'Notes', value: notes, inline: false });
-    }
+    await postToDiscord(env, { username: 'Hall of Legends', embeds: [embed] });
+}
 
-    await fetch(env.DISCORD_WEBHOOK_URL, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ username: 'Hall of Legends', embeds: [embed] }),
+/* Legacy alias so the proxy route still works */
+async function fireDiscordWebhook(env, data) {
+    return fireAchievementNotification(env, data);
+}
+
+/* --- SEASON START NOTIFICATION --- */
+async function fireSeasonStartNotification(env, season, players) {
+    // Parse challenges_config
+    let cfg = [];
+    try { cfg = season.challenges_config ? JSON.parse(season.challenges_config) : []; } catch (_) {}
+    const active = cfg.filter(c => c.active !== false);
+
+    // Group by point value
+    const byPts = {};
+    active.forEach(c => {
+        const k = c.pts || 1;
+        if (!byPts[k]) byPts[k] = [];
+        byPts[k].push(c.name || c.type);
     });
+
+    const challengeLines = Object.keys(byPts)
+        .sort((a, b) => Number(a) - Number(b))
+        .map(pts => {
+            const ptsNum  = Number(pts);
+            const coins   = '🪙'.repeat(ptsNum);
+            const list    = byPts[pts].map(n => `• ${n}`).join('\n');
+            return { name: `${coins} ${ptsNum} Point${ptsNum > 1 ? 's' : ''}`, value: list, inline: false };
+        });
+
+    // @mention all players with a discord_id
+    const mentions = players
+        .filter(p => p.discord_id)
+        .map(p => `<@${p.discord_id}>`)
+        .join(' ');
+
+    const seasonNum   = season.number ? `Season ${season.number}` : '';
+    const endDateStr  = season.end_date
+        ? new Date(season.end_date).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' })
+        : 'TBD';
+
+    const embed = {
+        title:       `⚔️ ${seasonNum ? seasonNum + ' — ' : ''}${season.name} Has Begun!`,
+        description: `The new Diablo IV season is now **ACTIVE**. Time to grind for glory, Champions!\n\n📅 **Season ends:** ${endDateStr}`,
+        color:       0x8B0000, // blood red
+        fields:      challengeLines.length > 0
+            ? [{ name: '🏆 Available Challenges', value: '​', inline: false }, ...challengeLines]
+            : [{ name: 'Challenges', value: 'No challenges configured yet', inline: false }],
+        footer:    { text: 'Diablo IV — Hall of Legends • May the best champion win!' },
+        timestamp: new Date().toISOString(),
+    };
+
+    // content pings everyone, embed has the details
+    const content = mentions
+        ? `🔔 New season alert! ${mentions} — your competition begins now!`
+        : '🔔 A new Diablo IV Hall of Legends season has started!';
+
+    await postToDiscord(env, { content, username: 'Hall of Legends', embeds: [embed] });
 }
