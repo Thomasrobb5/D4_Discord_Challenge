@@ -357,6 +357,8 @@ async function handleCreatePlayer(request, env) {
         'INSERT INTO players (name, class, discord_id) VALUES (?, ?, ?)'
     ).bind(name, cls, discord_id).run();
 
+    firePlayerAddedNotification(env, { name, class: cls, discord_id }).catch(e => console.error('Player notification failed:', e));
+
     return json({ success: true, id: res.meta.last_row_id }, 201);
 }
 
@@ -364,7 +366,11 @@ async function handleCreatePlayer(request, env) {
 // DELETE /api/players/:id  [ADMIN]
 // ════════════════════════════════════════════════════════════════
 async function handleDeletePlayer(id, env) {
+    const player = await env.DB.prepare('SELECT name FROM players WHERE id = ?').bind(id).first();
     await env.DB.prepare('DELETE FROM players WHERE id = ?').bind(id).run();
+    if (player) {
+        fireAdminLog(env, `🗑️ **Player Deleted**: ${player.name} (ID: ${id})`).catch(() => {});
+    }
     return json({ success: true });
 }
 
@@ -452,11 +458,14 @@ async function handleCreateAchievement(request, env) {
 // ════════════════════════════════════════════════════════════════
 async function handleDeleteAchievement(id, env) {
     const existing = await env.DB.prepare(
-        'SELECT id FROM achievements WHERE id = ?'
+        'SELECT * FROM achievements WHERE id = ?'
     ).bind(id).first();
     if (!existing) return err('Achievement not found', 404);
 
     await env.DB.prepare('DELETE FROM achievements WHERE id = ?').bind(id).run();
+    
+    fireAdminLog(env, `🗑️ **Achievement Deleted**: #${id} (${existing.achievement_type} for ${existing.player_name})`).catch(() => {});
+    
     return json({ success: true });
 }
 
@@ -543,6 +552,8 @@ async function handleCreateSeason(request, env) {
         INSERT INTO seasons (number, name, slug, status, start_date, end_date, next_season_start, challenges_config)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(number, name, slug, status, start_date || null, end_date || null, next_season_start || null, configJson).run();
+
+    fireSeasonAnnouncedNotification(env, { number, name, status, start_date }).catch(e => console.error('Season notification failed:', e));
 
     return json({ success: true, id: res.meta.last_row_id }, 201);
 }
@@ -727,6 +738,7 @@ async function fireSeasonStartNotification(env, season, players) {
         title:       `⚔️ ${seasonNum ? seasonNum + ' — ' : ''}${season.name} Has Begun!`,
         description: `The new Diablo IV season is now **ACTIVE**. Time to grind for glory, Champions!\n\n📅 **Season ends:** ${endDateStr}`,
         color:       0x8B0000, // blood red
+        image:       { url: 'https://images.blzstatic.com/diablo4/season-banner.jpg' }, // Placeholder for potential future dynamic image
         fields:      challengeLines.length > 0
             ? [{ name: '🏆 Available Challenges', value: '​', inline: false }, ...challengeLines]
             : [{ name: 'Challenges', value: 'No challenges configured yet', inline: false }],
@@ -734,12 +746,51 @@ async function fireSeasonStartNotification(env, season, players) {
         timestamp: new Date().toISOString(),
     };
 
-    // content pings everyone, embed has the details
     const content = mentions
-        ? `🔔 New season alert! ${mentions} — your competition begins now!`
-        : '🔔 A new Diablo IV Hall of Legends season has started!';
+        ? `🔔 **NEW SEASON ALERT!** ${mentions} — your competition begins now! ⚔️`
+        : '🔔 **A new Diablo IV Hall of Legends season has started!** ⚔️';
 
     await postToDiscord(env, { content, username: 'Hall of Legends', embeds: [embed] });
+}
+
+/* --- PLAYER ADDED NOTIFICATION --- */
+async function firePlayerAddedNotification(env, player) {
+    const embed = {
+        title: `🆕 New Champion Joined!`,
+        description: `A new warrior has entered the Hall of Legends. Welcome, **${player.name}**!`,
+        color: 0x3498db,
+        fields: [
+            { name: 'Class', value: player.class, inline: true },
+            { name: 'Status', value: 'Ready for the Grind ⚔️', inline: true }
+        ],
+        footer: { text: 'Diablo IV — Hall of Legends' },
+        timestamp: new Date().toISOString()
+    };
+    if (player.discord_id) embed.description += ` (<@${player.discord_id}>)`;
+
+    await postToDiscord(env, { username: 'Hall of Legends', embeds: [embed] });
+}
+
+/* --- SEASON ANNOUNCED NOTIFICATION --- */
+async function fireSeasonAnnouncedNotification(env, season) {
+    const dateStr = season.start_date 
+        ? new Date(season.start_date).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' }) 
+        : 'To Be Announced';
+
+    const embed = {
+        title: `📜 New Season Announced: ${season.name}`,
+        description: `Preparation begins! A new season has been recorded in the archives.`,
+        color: 0xf39c12,
+        fields: [
+            { name: 'Season Number', value: String(season.number), inline: true },
+            { name: 'Status', value: season.status.toUpperCase(), inline: true },
+            { name: 'Start Date', value: dateStr, inline: false }
+        ],
+        footer: { text: 'Diablo IV — Hall of Legends' },
+        timestamp: new Date().toISOString()
+    };
+
+    await postToDiscord(env, { username: 'Hall of Legends', embeds: [embed] });
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -841,4 +892,15 @@ async function handleDiscordLeaderboard(request, env) {
 
     await postToDiscord(env, { username: 'Hall of Legends', embeds: [embed] });
     return json({ success: true });
+}
+
+/* --- GENERIC ADMIN LOG --- */
+async function fireAdminLog(env, message) {
+    const embed = {
+        description: message,
+        color: 0x2c3e50,
+        footer: { text: 'Admin Log — Hall of Legends' },
+        timestamp: new Date().toISOString()
+    };
+    await postToDiscord(env, { username: 'Admin Bot', embeds: [embed] });
 }
