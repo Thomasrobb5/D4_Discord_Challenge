@@ -162,6 +162,29 @@
             .admin-back-link { margin-left: 0; }
             .challenge-grid { grid-template-columns: 1fr; }
         }
+
+        /* ── Login Overlay ── */
+        .login-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--void-black);
+            display: flex; align-items: center; justify-content: center;
+            padding: 2rem;
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        .login-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .login-card {
+            background: rgba(12,10,22,0.95);
+            border: 1px solid var(--border-red);
+            border-radius: var(--r-lg);
+            padding: 3rem 2rem;
+            max-width: 400px; width: 100%;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(139,0,0,0.2);
+            backdrop-filter: blur(20px);
+        }
+        .login-logo { height: 60px; margin-bottom: 1.5rem; filter: drop-shadow(0 0 10px rgba(139,0,0,0.5)); }
+        .login-title { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--text-bright); margin-bottom: 0.5rem; }
+        .login-subtitle { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 2rem; }
     </style>
 
 </head>
@@ -176,7 +199,10 @@
             <div class="admin-subtitle">Manage achievements, players, and seasons</div>
         </div>
         <div id="apiStatusBadge" class="api-status fail"><div class="api-dot"></div> API offline</div>
-        <a href="index.html" class="admin-back-link">← View Site</a>
+        <div style="display:flex; gap: 0.75rem; margin-left: auto; align-items: center;">
+            <a href="index.html" class="admin-back-link">← View Site</a>
+            <button class="btn btn-danger" onclick="logout()" style="padding: 0.5rem 0.8rem; font-size: 0.65rem;">Logout</button>
+        </div>
     </div>
 
     <!-- Stats bar -->
@@ -585,6 +611,24 @@ FROM achievements ORDER BY timestamp DESC LIMIT 20;</textarea></div>
 
 </div>
 
+<!-- Login Overlay -->
+<div id="loginOverlay" class="login-overlay hidden">
+    <div class="login-card">
+        <img src="Diablo_IV_2019_nosmoke_logo.webp" alt="Diablo IV" class="login-logo">
+        <div class="login-title">Gate of Hatred</div>
+        <div class="login-subtitle">Enter the admin password to proceed</div>
+        
+        <form id="loginForm" onsubmit="login(event)">
+            <div class="form-field" style="margin-bottom: 1.5rem;">
+                <label class="form-label">Admin Password</label>
+                <input type="password" id="loginPw" class="form-input" placeholder="••••••••" required autofocus>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 1rem;">Unlock Panel</button>
+            <div id="loginError" class="status-msg error" style="margin-top: 1rem;"></div>
+        </form>
+    </div>
+</div>
+
 <script>
 /* ════════════════════════════════════════════════════════════════
    Admin Panel Script
@@ -634,11 +678,89 @@ let allData = { players: [], achievements: [], seasons: [] };
 
 /* Helpers */
 const $ = id => document.getElementById(id);
+
+function getAdminPw() {
+    return localStorage.getItem('adminPassword') || '';
+}
+
 function showStatus(id, type, msg) {
     const el = $(id); if(!el) return;
     el.className = 'status-msg ' + type; el.textContent = msg;
     el.style.display = 'block';
     setTimeout(() => { el.style.display='none'; }, 6000);
+}
+
+// Auth flow
+async function checkAuth() {
+    const pw = getAdminPw();
+    if (!pw) {
+        $('loginOverlay').classList.remove('hidden');
+        return false;
+    }
+    
+    // Verify password with a lightweight call
+    try {
+        const res = await fetch(`${API_URL}/discord/webhook`, {
+            headers: { 'X-Admin-Password': pw }
+        });
+        if (res.status === 401) {
+            localStorage.removeItem('adminPassword');
+            $('loginOverlay').classList.remove('hidden');
+            return false;
+        }
+        $('loginOverlay').classList.add('hidden');
+        syncPasswordFields(pw);
+        return true;
+    } catch (e) {
+        // If API is down, we still let them in if they have a PW, 
+        // but we'll see the offline badge.
+        $('loginOverlay').classList.add('hidden');
+        syncPasswordFields(pw);
+        return true;
+    }
+}
+
+async function login(e) {
+    e.preventDefault();
+    const pw = $('loginPw').value;
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+
+    try {
+        const res = await fetch(`${API_URL}/discord/webhook`, {
+            headers: { 'X-Admin-Password': pw }
+        });
+        if (res.ok || res.status !== 401) {
+            localStorage.setItem('adminPassword', pw);
+            $('loginOverlay').classList.add('hidden');
+            syncPasswordFields(pw);
+            loadData();
+        } else {
+            showStatus('loginError', 'error', 'Invalid password');
+        }
+    } catch (err) {
+        showStatus('loginError', 'error', 'Connection error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Unlock Panel';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('adminPassword');
+    location.reload();
+}
+
+function syncPasswordFields(pw) {
+    const fields = [
+        'adminPw', 'p-pw', 'ss-pw', 's-pw', 'us-pw', 
+        'dc-webhook-pw', 'dc-welcome-pw', 'dc-lb-pw'
+    ];
+    fields.forEach(id => {
+        const el = $(id);
+        if (el) el.value = pw;
+    });
 }
 
 /* ── Load Data ── */
@@ -796,8 +918,8 @@ async function savePlayerEdit(id) {
     const name       = $(`pe-name-${id}`)?.value?.trim();
     const cls        = $(`pe-class-${id}`)?.value;
     const discord_id = $(`pe-discord-${id}`)?.value?.trim() || null;
-    const pw         = $('adminPw')?.value || prompt('Admin password:');
-    if (!pw) return;
+    const pw         = getAdminPw();
+    if (!pw) { showStatus(`pe-status-${id}`, 'error', 'Admin password required'); return; }
     if (!name) { showStatus(`pe-status-${id}`, 'error', 'Name is required'); return; }
 
     try {
@@ -845,13 +967,16 @@ function renderHistoryTable() {
 }
 
 /* ── Achievement Form ── */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const now  = new Date();
     const pad  = n => String(n).padStart(2,'0');
     const local = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
     $('ach-timestamp').value = local;
 
-    loadData();
+    const authed = await checkAuth();
+    if (authed) {
+        loadData();
+    }
     setupTabs();
     setupForms();
 });
@@ -976,8 +1101,8 @@ function setupForms() {
 
 async function deletePlayer(id, name) {
     if (!confirm(`Delete player "${name}"?\n\nThis will NOT delete their achievements — they will appear as unlinked entries.`)) return;
-    const pw = $('adminPw')?.value || $('p-pw')?.value || prompt('Admin password:');
-    if (!pw) return;
+    const pw = getAdminPw();
+    if (!pw) { showStatus('playerStatus','error','Admin password required'); return; }
     try {
         const res = await fetch(`${API_URL}/players/${id}`, { method:'DELETE', headers:{'X-Admin-Password':pw} });
         if (res.ok) {
@@ -992,8 +1117,8 @@ async function deletePlayer(id, name) {
 
 async function deleteAchievement(id) {
     if (!confirm(`Delete achievement ID ${id}? This cannot be undone.`)) return;
-    const pw = $('adminPw')?.value || prompt('Admin password:');
-    if (!pw) return;
+    const pw = getAdminPw();
+    if (!pw) { showStatus('achStatus','error','Admin password required'); return; }
     try {
         const res = await fetch(`${API_URL}/achievements/${id}`, { method:'DELETE', headers:{'X-Admin-Password':pw} });
         if (res.ok) {
