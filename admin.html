@@ -1197,7 +1197,9 @@ function loadSeasonIntoSetup() {
 
     const toLocalDT = (dt) => {
         if (!dt) return '';
-        return new Date(dt).toISOString().slice(0,16);
+        const d = new Date(dt);
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     };
     $('ss-number').value = season.number || '';
     $('ss-name').value   = season.name   || '';
@@ -1341,10 +1343,11 @@ async function saveSeasonSetup() {
 
     const body = { number, name, slug: slug||`season-${number}`, status, challenges_config };
     if (start) {
-        body.start_date = start;
-        body.next_season_start = start;
+        const startISO = new Date(start).toISOString();
+        body.start_date = startISO;
+        body.next_season_start = startISO;
     }
-    if (end) body.end_date = end;
+    if (end) body.end_date = new Date(end).toISOString();
 
     const headers = { 'Content-Type':'application/json', 'X-Admin-Password': pw };
 
