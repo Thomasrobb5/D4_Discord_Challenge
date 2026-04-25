@@ -134,6 +134,14 @@
          MAIN APP
     ══════════════════════════════════════════════════════════ -->
     <div id="mainApp" class="main-app hidden">
+    
+        <!-- LIVE TICKER (Moved to Top) -->
+        <div class="ticker-wrap" id="tickerWrap">
+            <div class="ticker-live-tag">LIVE</div>
+            <div class="ticker-scroll" id="tickerScroll">
+                <div class="ticker-item">Awaiting seasonal conquests...</div>
+            </div>
+        </div>
 
         <!-- STICKY HEADER -->
         <header class="site-header" id="siteHeader">
@@ -178,12 +186,6 @@
                         <span>⚡</span> Record
                     </button>
 
-                    <!-- User Profile / Login -->
-                    <div class="user-profile-section" id="userProfileSection">
-                        <button class="btn-discord-login" id="discordLoginBtn">
-                            <span class="discord-icon"></span> Sign In
-                        </button>
-                    </div>
                 </div>
             </div>
         </header>
@@ -210,13 +212,6 @@
 
         <!-- MAIN CONTENT -->
         <main class="site-main">
-            <!-- LIVE TICKER -->
-            <div class="ticker-wrap" id="tickerWrap">
-                <div class="ticker-live-tag">LIVE</div>
-                <div class="ticker-scroll" id="tickerScroll">
-                    <div class="ticker-item">Awaiting seasonal conquests...</div>
-                </div>
-            </div>
 
             <!-- ─── LEADERBOARD TAB ─── -->
             <section id="leaderboard" class="tab-panel active">
