@@ -240,29 +240,47 @@
                         <label class="form-label">Achievement Type</label>
                         <select class="form-select" id="ach-type" required>
                             <optgroup label="── 1 Point ──">
-                                <option value="legendary-item">Legendary Item</option>
-                                <option value="ancestral-legendary">Ancestral Legendary</option>
-                                <option value="unique-item">Unique Item</option>
-                                <option value="ancestral-unique">Ancestral Unique</option>
-                                <option value="ancestral-legendary-2ga">Ancestral Legendary (2GA)</option>
-                                <option value="ancestral-unique-2ga">Ancestral Unique (2GA)</option>
-                                <option value="chaos-unique-1ga">Chaos Unique (1GA)</option>
-                                <option value="any-1ga-item">Any 1GA Item</option>
+                                <option value="legendary-item">Legendary (Non GA)</option>
+                                <option value="unique-item">Unique</option>
+                                <option value="rare-1ga">Rare 1GA</option>
+                                <option value="legendary-1ga">Legendary 1GA</option>
+                                <option value="unique-1ga">Unique 1GA</option>
+                                <option value="pre-torment-set">Pre-Torment Set (Charm)</option>
+                                <option value="tower-500">Tower Rank Top-500</option>
+                                <option value="journey-4">Season Journey Rank: IV</option>
                             </optgroup>
                             <optgroup label="── 2 Points ──">
-                                <option value="ancestral-unique-3ga">Ancestral Unique (3GA)</option>
-                                <option value="ancestral-legendary-3ga">Ancestral Legendary (3GA)</option>
-                                <option value="mythic-1ga">Mythic Item (1GA)</option>
-                                <option value="mythic-no-cache">Mythic Item (No Cache)</option>
-                                <option value="mythic-2ga">Mythic Item (2GA)</option>
-                                <option value="chaos-unique-2ga">Chaos Unique (2GA)</option>
-                                <option value="grandpapa-bonus">Grandpapa Bonus</option>
+                                <option value="rare-2ga">Rare 2GA</option>
+                                <option value="legendary-2ga">Legendary 2GA</option>
+                                <option value="unique-2ga">Unique 2GA</option>
+                                <option value="legendary-rune">Legendary Rune</option>
+                                <option value="pit-50">Solo Pit 50</option>
+                                <option value="echoing-50">Solo Echoing Hatred 50</option>
+                                <option value="torment-set">Torment Set Item</option>
+                                <option value="tower-250">Tower Rank Top-250</option>
+                                <option value="journey-5">Season Journey Rank: V</option>
+                                <option value="paragon-225">Paragon Lvl 225</option>
                             </optgroup>
                             <optgroup label="── 3 Points ──">
-                                <option value="mythic-3ga">Mythic Item (3GA)</option>
-                                <option value="ancestral-unique-4ga">Ancestral Unique (4GA)</option>
-                                <option value="mythic-4ga">Mythic Item (4GA)</option>
-                                <option value="chaos-unique-3ga">Chaos Unique (3GA)</option>
+                                <option value="rare-3ga">Rare 3GA</option>
+                                <option value="legendary-3ga">Legendary 3GA</option>
+                                <option value="unique-3ga">Unique 3GA</option>
+                                <option value="mythic-1ga">Mythic 1GA</option>
+                                <option value="pit-100">Solo Pit 100</option>
+                                <option value="echoing-100">Solo Echoing Hatred 100</option>
+                                <option value="journey-6">Season Journey Rank: VI</option>
+                                <option value="paragon-250">Paragon Lvl 250</option>
+                            </optgroup>
+                            <optgroup label="── 4+ Points ──">
+                                <option value="rare-4ga">Rare 4GA</option>
+                                <option value="legendary-4ga">Legendary 4GA</option>
+                                <option value="unique-4ga">Unique 4GA</option>
+                                <option value="mythic-2ga">Mythic 2GA</option>
+                                <option value="paragon-275">Paragon Lvl 275</option>
+                                <option value="mythic-3ga">Mythic 3GA</option>
+                                <option value="journey-9">Season Journey Rank: IX</option>
+                                <option value="paragon-300">Paragon Lvl 300</option>
+                                <option value="mythic-4ga">Mythic 4GA (10pts)</option>
                             </optgroup>
                         </select>
                     </div>
@@ -475,6 +493,15 @@
                 <div class="status-msg" id="updateSeasonStatus"></div>
             </form>
         </div>
+
+        <div class="admin-section">
+            <div class="section-title"><span class="section-icon">📜</span> Existing Seasons</div>
+            <table class="data-table">
+                <thead><tr><th>#</th><th>Name</th><th>Slug</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="seasonsTableBody"></tbody>
+            </table>
+            <div id="seasonTableStatus" class="status-msg"></div>
+        </div>
     </div>
 
     <!-- ─── HISTORY ─── -->
@@ -648,32 +675,29 @@ function escHtml(str) {
 }
 
 const POINT_MAP = {
-    'legendary-item':1,'ancestral-legendary':1,'unique-item':1,'ancestral-unique':1,
-    'ancestral-legendary-2ga':1,'ancestral-unique-2ga':1,'chaos-unique-1ga':1,'any-1ga-item':1,
-    'ancestral-unique-3ga':2,'ancestral-legendary-3ga':2,'mythic-1ga':2,'mythic-no-cache':2,
-    'mythic-2ga':2,'chaos-unique-2ga':2,'grandpapa-bonus':2,
-    'mythic-3ga':3,'ancestral-unique-4ga':3,'mythic-4ga':3,'chaos-unique-3ga':3,
+    'legendary-item':1,'unique-item':1,'rare-1ga':1,'legendary-1ga':1,'unique-1ga':1,'pre-torment-set':1,'tower-500':1,'journey-4':1,
+    'rare-2ga':2,'legendary-2ga':2,'unique-2ga':2,'legendary-rune':2,'pit-50':2,'echoing-50':2,'torment-set':2,'tower-250':2,'journey-5':2,'paragon-225':2,
+    'rare-3ga':3,'legendary-3ga':3,'unique-3ga':3,'mythic-1ga':3,'pit-100':3,'echoing-100':3,'journey-6':3,'paragon-250':3,
+    'rare-4ga':4,'legendary-4ga':4,'unique-4ga':4,'mythic-2ga':4,'paragon-275':4,
+    'mythic-3ga':5,'journey-9':5,'paragon-300':5,
+    'mythic-4ga':10,
 };
 const RARITY_MAP = {
-    'legendary-item':'legendary','ancestral-legendary':'ancestral','unique-item':'unique',
-    'ancestral-unique':'ancestral','ancestral-legendary-2ga':'ancestral','ancestral-unique-2ga':'ancestral',
-    'chaos-unique-1ga':'chaos','any-1ga-item':'legendary','ancestral-unique-3ga':'ancestral',
-    'ancestral-legendary-3ga':'ancestral','mythic-1ga':'mythic','mythic-no-cache':'mythic',
-    'mythic-2ga':'mythic','chaos-unique-2ga':'chaos','grandpapa-bonus':'unique',
-    'mythic-3ga':'mythic','ancestral-unique-4ga':'ancestral','mythic-4ga':'mythic','chaos-unique-3ga':'chaos',
+    'legendary-item':'legendary','unique-item':'unique','rare-1ga':'legendary','legendary-1ga':'legendary','unique-1ga':'unique','pre-torment-set':'ancestral','tower-500':'legendary','journey-4':'legendary',
+    'rare-2ga':'legendary','legendary-2ga':'legendary','unique-2ga':'unique','legendary-rune':'legendary','pit-50':'legendary','echoing-50':'legendary','torment-set':'ancestral','tower-250':'legendary','journey-5':'legendary','paragon-225':'legendary',
+    'rare-3ga':'legendary','legendary-3ga':'legendary','unique-3ga':'unique','mythic-1ga':'mythic','pit-100':'legendary','echoing-100':'legendary','journey-6':'legendary','paragon-250':'legendary',
+    'rare-4ga':'legendary','legendary-4ga':'legendary','unique-4ga':'unique','mythic-2ga':'mythic','paragon-275':'legendary',
+    'mythic-3ga':'mythic','journey-9':'legendary','paragon-300':'legendary',
+    'mythic-4ga':'mythic',
 };
 
 const ACHIEVEMENT_NAMES = {
-    'legendary-item':'Legendary Item','ancestral-legendary':'Ancestral Legendary',
-    'unique-item':'Unique Item','ancestral-unique':'Ancestral Unique',
-    'ancestral-legendary-2ga':'Ancestral Legendary (2GA)','ancestral-unique-2ga':'Ancestral Unique (2GA)',
-    'chaos-unique-1ga':'Chaos Unique (1GA)','any-1ga-item':'Any 1GA Item',
-    'ancestral-unique-3ga':'Ancestral Unique (3GA)','ancestral-legendary-3ga':'Ancestral Legendary (3GA)',
-    'mythic-1ga':'Mythic Item (1GA)','mythic-no-cache':'Mythic (No Cache)',
-    'mythic-2ga':'Mythic Item (2GA)','chaos-unique-2ga':'Chaos Unique (2GA)',
-    'grandpapa-bonus':'Grandpapa Bonus','mythic-3ga':'Mythic Item (3GA)',
-    'ancestral-unique-4ga':'Ancestral Unique (4GA)','mythic-4ga':'Mythic Item (4GA)',
-    'chaos-unique-3ga':'Chaos Unique (3GA)',
+    'legendary-item':'Legendary (Non GA)','unique-item':'Unique','rare-1ga':'Rare 1GA','legendary-1ga':'Legendary 1GA','unique-1ga':'Unique 1GA','pre-torment-set':'Pre-Torment Set (Charm)','tower-500':'Tower Rank Top-500','journey-4':'Season Journey Rank: IV',
+    'rare-2ga':'Rare 2GA','legendary-2ga':'Legendary 2GA','unique-2ga':'Unique 2GA','legendary-rune':'Legendary Rune','pit-50':'Solo Pit 50','echoing-50':'Solo Echoing Hatred 50','torment-set':'Torment Set Item','tower-250':'Tower Rank Top-250','journey-5':'Season Journey Rank: V','paragon-225':'Paragon Lvl 225',
+    'rare-3ga':'Rare 3GA','legendary-3ga':'Legendary 3GA','unique-3ga':'Unique 3GA','mythic-1ga':'Mythic 1GA','pit-100':'Solo Pit 100','echoing-100':'Solo Echoing Hatred 100','journey-6':'Season Journey Rank: VI','paragon-250':'Paragon Lvl 250',
+    'rare-4ga':'Rare 4GA','legendary-4ga':'Legendary 4GA','unique-4ga':'Unique 4GA','mythic-2ga':'Mythic 2GA','paragon-275':'Paragon Lvl 275',
+    'mythic-3ga':'Mythic 3GA','journey-9':'Season Journey Rank: IX','paragon-300':'Paragon Lvl 300',
+    'mythic-4ga':'Mythic 4GA',
 };
 
 let allData = { players: [], achievements: [], seasons: [] };
@@ -773,8 +797,8 @@ async function loadData() {
         allData = await res.json();
         updateStats();
         populatePlayers();
-        populateSeasons();
         renderPlayersTable();
+        renderSeasonsTable();
         renderHistoryTable();
         initSetupWizard();
 
@@ -824,6 +848,42 @@ function populateSeasons() {
                 sel.appendChild(o);
             });
     });
+}
+
+function renderSeasonsTable() {
+    populateSeasons();
+    const tbody = $('seasonsTableBody');
+    if (!tbody) return;
+    if (!allData.seasons.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-dim);text-align:center">No seasons found</td></tr>'; return; }
+    tbody.innerHTML = '';
+    allData.seasons.sort((a,b) => b.number - a.number).forEach(s => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${s.number}</td>
+            <td style="color:var(--text-bright);font-weight:600">${s.name}</td>
+            <td>${s.slug}</td>
+            <td><span class="api-status ${s.status==='active'?'ok':'fail'}" style="font-size:0.65rem;padding:0.2rem 0.5rem">${s.status}</span></td>
+            <td>
+                <button class="btn btn-danger" onclick="deleteSeason(${s.id},'${s.name}')">Delete</button>
+            </td>`;
+        tbody.appendChild(row);
+    });
+}
+
+async function deleteSeason(id, name) {
+    if (!confirm(`Delete season "${name}"?\n\nThis will remove the season entry from the portal. Achievements for this season will remain in the DB but won't be linked to this season anymore.`)) return;
+    const pw = getAdminPw();
+    if (!pw) { showStatus('seasonTableStatus','error','Admin password required'); return; }
+    try {
+        const res = await fetch(`${API_URL}/seasons/${id}`, { method:'DELETE', headers:{'X-Admin-Password':pw} });
+        if (res.ok) {
+            showStatus('seasonTableStatus','success',`✓ Season "${name}" deleted.`);
+            await loadData();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            showStatus('seasonTableStatus','error', data.error || 'Error deleting season.');
+        }
+    } catch (e) { showStatus('seasonTableStatus','error', e.message); }
 }
 
 /* Update achievement-type dropdown with custom challenges for selected season */
@@ -1142,29 +1202,47 @@ async function deleteAchievement(id) {
 // Full challenge definitions with default points
 const ALL_CHALLENGES = [
     { tier: '1 Point', items: [
-        { type:'legendary-item',          name:'Legendary Item',            pts:1 },
-        { type:'ancestral-legendary',     name:'Ancestral Legendary',       pts:1 },
-        { type:'unique-item',             name:'Unique Item',               pts:1 },
-        { type:'ancestral-unique',        name:'Ancestral Unique',          pts:1 },
-        { type:'ancestral-legendary-2ga', name:'Ancestral Legendary (2GA)', pts:1 },
-        { type:'ancestral-unique-2ga',    name:'Ancestral Unique (2GA)',    pts:1 },
-        { type:'chaos-unique-1ga',        name:'Chaos Unique (1GA)',        pts:1 },
-        { type:'any-1ga-item',            name:'Any 1GA Item',              pts:1 },
+        { type:'legendary-item',   name:'Legendary (Non GA)',  pts:1 },
+        { type:'unique-item',      name:'Unique',              pts:1 },
+        { type:'rare-1ga',         name:'Rare 1GA',            pts:1 },
+        { type:'legendary-1ga',    name:'Legendary 1GA',       pts:1 },
+        { type:'unique-1ga',       name:'Unique 1GA',          pts:1 },
+        { type:'pre-torment-set',  name:'Pre-Torment Set',     pts:1 },
+        { type:'tower-500',        name:'Tower Top-500',       pts:1 },
+        { type:'journey-4',        name:'Season Journey IV',   pts:1 },
     ]},
     { tier: '2 Points', items: [
-        { type:'ancestral-unique-3ga',    name:'Ancestral Unique (3GA)',    pts:2 },
-        { type:'ancestral-legendary-3ga', name:'Ancestral Legendary (3GA)', pts:2 },
-        { type:'mythic-no-cache',         name:'Mythic (No Cache)',         pts:2 },
-        { type:'mythic-1ga',              name:'Mythic Item (1GA)',         pts:2 },
-        { type:'mythic-2ga',              name:'Mythic Item (2GA)',         pts:2 },
-        { type:'chaos-unique-2ga',        name:'Chaos Unique (2GA)',        pts:2 },
-        { type:'grandpapa-bonus',         name:'Grandpapa Bonus',           pts:2 },
+        { type:'rare-2ga',         name:'Rare 2GA',            pts:2 },
+        { type:'legendary-2ga',    name:'Legendary 2GA',       pts:2 },
+        { type:'unique-2ga',       name:'Unique 2GA',          pts:2 },
+        { type:'legendary-rune',   name:'Legendary Rune',      pts:2 },
+        { type:'pit-50',           name:'Solo Pit 50',         pts:2 },
+        { type:'echoing-50',       name:'Solo Echoing 50',     pts:2 },
+        { type:'torment-set',      name:'Torment Set Item',    pts:2 },
+        { type:'tower-250',        name:'Tower Top-250',       pts:2 },
+        { type:'journey-5',        name:'Season Journey V',    pts:2 },
+        { type:'paragon-225',      name:'Paragon Lvl 225',     pts:2 },
     ]},
     { tier: '3 Points', items: [
-        { type:'mythic-3ga',              name:'Mythic Item (3GA)',         pts:3 },
-        { type:'ancestral-unique-4ga',    name:'Ancestral Unique (4GA)',    pts:3 },
-        { type:'mythic-4ga',              name:'Mythic Item (4GA)',         pts:3 },
-        { type:'chaos-unique-3ga',        name:'Chaos Unique (3GA)',        pts:3 },
+        { type:'rare-3ga',         name:'Rare 3GA',            pts:3 },
+        { type:'legendary-3ga',    name:'Legendary 3GA',       pts:3 },
+        { type:'unique-3ga',       name:'Unique 3GA',          pts:3 },
+        { type:'mythic-1ga',       name:'Mythic 1GA',          pts:3 },
+        { type:'pit-100',          name:'Solo Pit 100',        pts:3 },
+        { type:'echoing-100',      name:'Solo Echoing 100',    pts:3 },
+        { type:'journey-6',        name:'Season Journey VI',   pts:3 },
+        { type:'paragon-250',      name:'Paragon Lvl 250',     pts:3 },
+    ]},
+    { tier: '4+ Points', items: [
+        { type:'rare-4ga',         name:'Rare 4GA',            pts:4 },
+        { type:'legendary-4ga',    name:'Legendary 4GA',       pts:4 },
+        { type:'unique-4ga',       name:'Unique 4GA',          pts:4 },
+        { type:'mythic-2ga',       name:'Mythic 2GA',          pts:4 },
+        { type:'paragon-275',      name:'Paragon Lvl 275',     pts:4 },
+        { type:'mythic-3ga',       name:'Mythic 3GA',          pts:5 },
+        { type:'journey-9',        name:'Season Journey IX',   pts:5 },
+        { type:'paragon-300',      name:'Paragon Lvl 300',     pts:5 },
+        { type:'mythic-4ga',       name:'Mythic 4GA',          pts:10},
     ]},
 ];
 

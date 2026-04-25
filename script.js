@@ -26,25 +26,52 @@ const appState = {
 
 // ── ACHIEVEMENT TEMPLATES ────────────────────────────────────────
 const achievementTemplates = {
-    'legendary-item':         { name: 'Legendary Item',           rarity: 'legendary', points: 1, icon: '🌕', description: 'First to obtain a Legendary quality item this season.' },
-    'ancestral-legendary':    { name: 'Ancestral Legendary',      rarity: 'ancestral', points: 1, icon: '⚔️', description: 'First ancestral legendary item claimed from the depths.' },
-    'unique-item':            { name: 'Unique Item',              rarity: 'unique',    points: 1, icon: '💎', description: 'First unique item drop — a rare blessing from the heavens.' },
-    'ancestral-unique':       { name: 'Ancestral Unique',         rarity: 'ancestral', points: 1, icon: '🔮', description: 'First ancestral unique — power beyond mortal comprehension.' },
-    'ancestral-legendary-2ga':{ name: 'Ancestral Legendary (2GA)',rarity: 'ancestral', points: 1, icon: '🔱', description: 'An ancestral legendary bearing two greater affixes.' },
-    'ancestral-unique-2ga':   { name: 'Ancestral Unique (2GA)',   rarity: 'ancestral', points: 1, icon: '💠', description: 'An ancestral unique item with two greater affixes.' },
-    'chaos-unique-1ga':       { name: 'Chaos Unique (1GA)',       rarity: 'chaos',     points: 1, icon: '🌀', description: 'A chaos unique with one greater affix — born from Lilith\'s will.' },
-    'any-1ga-item':           { name: 'Any 1GA Item',             rarity: 'legendary', points: 1, icon: '✨', description: 'Any item bearing a single greater affix — the mark of superiority.' },
-    'ancestral-unique-3ga':   { name: 'Ancestral Unique (3GA)',   rarity: 'ancestral', points: 2, icon: '💠', description: 'An ancestral unique armed with three greater affixes.' },
-    'ancestral-legendary-3ga':{ name: 'Ancestral Legendary (3GA)',rarity: 'ancestral', points: 2, icon: '🔱', description: 'An ancestral legendary bearing three greater affixes.' },
-    'mythic-1ga':             { name: 'Mythic Item (1GA)',        rarity: 'mythic',    points: 2, icon: '⛩️', description: 'First mythic item with a greater affix — worthy of legend.' },
-    'mythic-no-cache':        { name: 'Mythic Item (No Cache)',   rarity: 'mythic',    points: 2, icon: '⛩️', description: 'A mythic item obtained without cache — raw power earned.' },
-    'mythic-2ga':             { name: 'Mythic Item (2GA)',        rarity: 'mythic',    points: 2, icon: '⛩️', description: 'A mythic item bearing two greater affixes.' },
-    'chaos-unique-2ga':       { name: 'Chaos Unique (2GA)',       rarity: 'chaos',     points: 2, icon: '🌪️', description: 'A chaos unique with two greater affixes. Chaos incarnate.' },
-    'grandpapa-bonus':        { name: 'Grandpapa Bonus',          rarity: 'unique',    points: 2, icon: '👴', description: 'A special bonus achievement for remarkable contribution.' },
-    'mythic-3ga':             { name: 'Mythic Item (3GA)',        rarity: 'mythic',    points: 3, icon: '⛩️', description: 'A mythic item with three greater affixes — near perfect power.' },
-    'ancestral-unique-4ga':   { name: 'Ancestral Unique (4GA)',   rarity: 'ancestral', points: 3, icon: '💠', description: 'An ancestral unique with four greater affixes — perfection achieved.' },
-    'mythic-4ga':             { name: 'Mythic Item (4GA)',        rarity: 'mythic',    points: 3, icon: '⛩️', description: 'A mythic item with four greater affixes — absolute dominion.' },
-    'chaos-unique-3ga':       { name: 'Chaos Unique (3GA)',       rarity: 'chaos',     points: 3, icon: '🌋', description: 'A chaos unique bearing three greater affixes — true chaos unleashed.' },
+    // ── 1 Point ──────────────────────────────────────────
+    'legendary-item':         { name: 'Legendary (Non GA)',       rarity: 'legendary', points: 1, icon: '🌕', description: 'A legendary item without greater affixes.' },
+    'unique-item':            { name: 'Unique',                   rarity: 'unique',    points: 1, icon: '💎', description: 'A unique item — a rare blessing from the heavens.' },
+    'rare-1ga':               { name: 'Rare 1GA',                 rarity: 'legendary', points: 1, icon: '✨', description: 'A rare item bearing a single greater affix.' },
+    'legendary-1ga':          { name: 'Legendary 1GA',            rarity: 'legendary', points: 1, icon: '🌟', description: 'A legendary item with one greater affix.' },
+    'unique-1ga':             { name: 'Unique 1GA',               rarity: 'unique',    points: 1, icon: '💠', description: 'A unique item with one greater affix.' },
+    'pre-torment-set':        { name: 'Pre-Torment Set (Charm)',  rarity: 'ancestral', points: 1, icon: '🧿', description: 'A set charm obtained before reaching Torment difficulty.' },
+    'tower-500':              { name: 'Tower Rank Top-500',       rarity: 'legendary', points: 1, icon: '🗼', description: 'Achieved a rank in the top 500 of the Tower.' },
+    'journey-4':              { name: 'Season Journey Rank: IV',  rarity: 'legendary', points: 1, icon: '📜', description: 'Completed Chapter IV of the Season Journey.' },
+
+    // ── 2 Points ─────────────────────────────────────────
+    'rare-2ga':               { name: 'Rare 2GA',                 rarity: 'legendary', points: 2, icon: '✨', description: 'A rare item bearing two greater affixes.' },
+    'legendary-2ga':          { name: 'Legendary 2GA',            rarity: 'legendary', points: 2, icon: '🌟', description: 'A legendary item with two greater affixes.' },
+    'unique-2ga':             { name: 'Unique 2GA',               rarity: 'unique',    points: 2, icon: '💠', description: 'A unique item with two greater affixes.' },
+    'legendary-rune':         { name: 'Legendary Rune',           rarity: 'legendary', points: 2, icon: 'ᚱ', description: 'A powerful legendary rune found in the wild.' },
+    'pit-50':                 { name: 'Solo Pit 50',              rarity: 'legendary', points: 2, icon: '🕳️', description: 'Conquered Pit Level 50 solo.' },
+    'echoing-50':             { name: 'Solo Echoing Hatred 50',   rarity: 'legendary', points: 2, icon: '💀', description: 'Defeated Echoing Hatred Level 50 solo.' },
+    'torment-set':            { name: 'Torment Set Item',         rarity: 'ancestral', points: 2, icon: '🔱', description: 'A set item obtained within Torment difficulty.' },
+    'tower-250':              { name: 'Tower Rank Top-250',       rarity: 'legendary', points: 2, icon: '🗼', description: 'Achieved a rank in the top 250 of the Tower.' },
+    'journey-5':              { name: 'Season Journey Rank: V',   rarity: 'legendary', points: 2, icon: '📜', description: 'Completed Chapter V of the Season Journey.' },
+    'paragon-225':            { name: 'Paragon Lvl 225',          rarity: 'legendary', points: 2, icon: '🔯', description: 'Reached Paragon Level 225.' },
+
+    // ── 3 Points ─────────────────────────────────────────
+    'rare-3ga':               { name: 'Rare 3GA',                 rarity: 'legendary', points: 3, icon: '✨', description: 'A rare item bearing three greater affixes.' },
+    'legendary-3ga':          { name: 'Legendary 3GA',            rarity: 'legendary', points: 3, icon: '🌟', description: 'A legendary item with three greater affixes.' },
+    'unique-3ga':             { name: 'Unique 3GA',               rarity: 'unique',    points: 3, icon: '💠', description: 'A unique item with three greater affixes.' },
+    'mythic-1ga':             { name: 'Mythic 1GA',               rarity: 'mythic',    points: 3, icon: '⛩️', description: 'A mythic item bearing a single greater affix.' },
+    'pit-100':                { name: 'Solo Pit 100',             rarity: 'legendary', points: 3, icon: '🕳️', description: 'Conquered Pit Level 100 solo.' },
+    'echoing-100':            { name: 'Solo Echoing Hatred 100',  rarity: 'legendary', points: 3, icon: '💀', description: 'Defeated Echoing Hatred Level 100 solo.' },
+    'journey-6':              { name: 'Season Journey Rank: VI',  rarity: 'legendary', points: 3, icon: '📜', description: 'Completed Chapter VI of the Season Journey.' },
+    'paragon-250':            { name: 'Paragon Lvl 250',          rarity: 'legendary', points: 3, icon: '🔯', description: 'Reached Paragon Level 250.' },
+
+    // ── 4 Points ─────────────────────────────────────────
+    'rare-4ga':               { name: 'Rare 4GA',                 rarity: 'legendary', points: 4, icon: '✨', description: 'A rare item bearing four greater affixes.' },
+    'legendary-4ga':          { name: 'Legendary 4GA',            rarity: 'legendary', points: 4, icon: '🌟', description: 'A legendary item with four greater affixes.' },
+    'unique-4ga':             { name: 'Unique 4GA',               rarity: 'unique',    points: 4, icon: '💠', description: 'A unique item with four greater affixes.' },
+    'mythic-2ga':             { name: 'Mythic 2GA',               rarity: 'mythic',    points: 4, icon: '⛩️', description: 'A mythic item bearing two greater affixes.' },
+    'paragon-275':            { name: 'Paragon Lvl 275',          rarity: 'legendary', points: 4, icon: '🔯', description: 'Reached Paragon Level 275.' },
+
+    // ── 5 Points ─────────────────────────────────────────
+    'mythic-3ga':             { name: 'Mythic 3GA',               rarity: 'mythic',    points: 5, icon: '⛩️', description: 'A mythic item bearing three greater affixes.' },
+    'journey-9':              { name: 'Season Journey Rank: IX',  rarity: 'legendary', points: 5, icon: '📜', description: 'Completed Chapter IX of the Season Journey.' },
+    'paragon-300':            { name: 'Paragon Lvl 300',          rarity: 'legendary', points: 5, icon: '🔯', description: 'Reached Paragon Level 300.' },
+
+    // ── 10 Points ────────────────────────────────────────
+    'mythic-4ga':             { name: 'Mythic 4GA',               rarity: 'mythic',    points: 10,icon: '⛩️', description: 'A mythic item bearing four greater affixes — absolute perfection.' },
 };
 
 const BADGE_DEFS = {

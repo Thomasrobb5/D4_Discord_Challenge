@@ -24,48 +24,22 @@
 
 // ── Achievement point map (source of truth) ─────────────────────
 const POINT_MAP = {
-    'legendary-item':         1,
-    'ancestral-legendary':    1,
-    'unique-item':            1,
-    'ancestral-unique':       1,
-    'ancestral-legendary-2ga':1,
-    'ancestral-unique-2ga':   1,
-    'chaos-unique-1ga':       1,
-    'any-1ga-item':           1,
-    'ancestral-unique-3ga':   2,
-    'ancestral-legendary-3ga':2,
-    'mythic-1ga':             2,
-    'mythic-no-cache':        2,
-    'mythic-2ga':             2,
-    'chaos-unique-2ga':       2,
-    'grandpapa-bonus':        2,
-    'mythic-3ga':             3,
-    'ancestral-unique-4ga':   3,
-    'mythic-4ga':             3,
-    'chaos-unique-3ga':       3,
+    'legendary-item':   1, 'unique-item':      1, 'rare-1ga':         1, 'legendary-1ga':    1, 'unique-1ga':       1, 'pre-torment-set':  1, 'tower-500':        1, 'journey-4':        1,
+    'rare-2ga':         2, 'legendary-2ga':    2, 'unique-2ga':       2, 'legendary-rune':   2, 'pit-50':           2, 'echoing-50':       2, 'torment-set':      2, 'tower-250':        2, 'journey-5':        2, 'paragon-225':      2,
+    'rare-3ga':         3, 'legendary-3ga':    3, 'unique-3ga':       3, 'mythic-1ga':       3, 'pit-100':          3, 'echoing-100':      3, 'journey-6':        3, 'paragon-250':      3,
+    'rare-4ga':         4, 'legendary-4ga':    4, 'unique-4ga':       4, 'mythic-2ga':       4, 'paragon-275':      4,
+    'mythic-3ga':       5, 'journey-9':        5, 'paragon-300':      5,
+    'mythic-4ga':       10,
 };
 
 // ── Rarity map ───────────────────────────────────────────────────
 const RARITY_MAP = {
-    'legendary-item':         'legendary',
-    'ancestral-legendary':    'ancestral',
-    'unique-item':            'unique',
-    'ancestral-unique':       'ancestral',
-    'ancestral-legendary-2ga':'ancestral',
-    'ancestral-unique-2ga':   'ancestral',
-    'chaos-unique-1ga':       'chaos',
-    'any-1ga-item':           'legendary',
-    'ancestral-unique-3ga':   'ancestral',
-    'ancestral-legendary-3ga':'ancestral',
-    'mythic-1ga':             'mythic',
-    'mythic-no-cache':        'mythic',
-    'mythic-2ga':             'mythic',
-    'chaos-unique-2ga':       'chaos',
-    'grandpapa-bonus':        'unique',
-    'mythic-3ga':             'mythic',
-    'ancestral-unique-4ga':   'ancestral',
-    'mythic-4ga':             'mythic',
-    'chaos-unique-3ga':       'chaos',
+    'legendary-item':   'legendary', 'unique-item':      'unique',    'rare-1ga':         'legendary', 'legendary-1ga':    'legendary', 'unique-1ga':       'unique',    'pre-torment-set':  'ancestral', 'tower-500':        'legendary', 'journey-4':        'legendary',
+    'rare-2ga':         'legendary', 'legendary-2ga':    'legendary', 'unique-2ga':       'unique',    'legendary-rune':   'legendary', 'pit-50':           'legendary', 'echoing-50':       'legendary', 'torment-set':      'ancestral', 'tower-250':        'legendary', 'journey-5':        'legendary', 'paragon-225':      'legendary',
+    'rare-3ga':         'legendary', 'legendary-3ga':    'legendary', 'unique-3ga':       'unique',    'mythic-1ga':       'mythic',    'pit-100':          'legendary', 'echoing-100':      'legendary', 'journey-6':        'legendary', 'paragon-250':      'legendary',
+    'rare-4ga':         'legendary', 'legendary-4ga':    'legendary', 'unique-4ga':       'unique',    'mythic-2ga':       'mythic',    'paragon-275':      'legendary',
+    'mythic-3ga':       'mythic',    'journey-9':        'legendary', 'paragon-300':      'legendary',
+    'mythic-4ga':       'mythic',
 };
 
 // Discord embed colours per rarity
@@ -194,11 +168,18 @@ export default {
                 if (deny) return deny;
                 return handleCreateSeason(request, env);
             }
-            const seasonPatch = path.match(/^\/api\/seasons\/(\d+)$/);
-            if (method === 'PATCH' && seasonPatch) {
-                const deny = requireAdmin(request, env);
-                if (deny) return deny;
-                return handleUpdateSeason(parseInt(seasonPatch[1]), request, env);
+            const seasonMatch = path.match(/^\/api\/seasons\/(\d+)$/);
+            if (seasonMatch) {
+                if (method === 'PATCH') {
+                    const deny = requireAdmin(request, env);
+                    if (deny) return deny;
+                    return handleUpdateSeason(parseInt(seasonMatch[1]), request, env);
+                }
+                if (method === 'DELETE') {
+                    const deny = requireAdmin(request, env);
+                    if (deny) return deny;
+                    return handleDeleteSeason(parseInt(seasonMatch[1]), env);
+                }
             }
 
             // ── Discord Integration ─────────────────────────────
@@ -676,6 +657,21 @@ async function handleUpdateSeason(id, request, env) {
     return json({ success: true });
 }
 
+async function handleDeleteSeason(id, env) {
+    const season = await env.DB.prepare('SELECT name FROM seasons WHERE id = ?').bind(id).first();
+    if (!season) return err('Season not found', 404);
+
+    await env.DB.prepare('DELETE FROM seasons WHERE id = ?').bind(id).run();
+    // Also delete achievements for this season? For now, we'll keep them in history or delete them?
+    // User asked to "delete seasons", usually implies wiping it. 
+    // We'll leave achievements to avoid accidental mass-deletion of data if they just want to hide it, 
+    // BUT actually DB schema might have foreign keys or it might just be a string slug.
+    // Let's just delete the season record.
+    
+    fireAdminLog(env, `🗑️ **Season Deleted**: ${season.name} (ID: ${id})`).catch(() => {});
+    return json({ success: true });
+}
+
 // ════════════════════════════════════════════════════════════════
 // POST /api/discord-webhook  — proxy route (e.g. for custom messages)
 // ════════════════════════════════════════════════════════════════
@@ -692,25 +688,12 @@ async function handleDiscordWebhook(request, env) {
 // ════════════════════════════════════════════════════════════════
 
 const ACHIEVEMENT_NAMES = {
-    'legendary-item':         'Legendary Item',
-    'ancestral-legendary':    'Ancestral Legendary',
-    'unique-item':            'Unique Item',
-    'ancestral-unique':       'Ancestral Unique',
-    'ancestral-legendary-2ga':'Ancestral Legendary (2GA)',
-    'ancestral-unique-2ga':   'Ancestral Unique (2GA)',
-    'chaos-unique-1ga':       'Chaos Unique (1GA)',
-    'any-1ga-item':           'Any 1GA Item',
-    'ancestral-unique-3ga':   'Ancestral Unique (3GA)',
-    'ancestral-legendary-3ga':'Ancestral Legendary (3GA)',
-    'mythic-1ga':             'Mythic Item (1GA)',
-    'mythic-no-cache':        'Mythic (No Cache)',
-    'mythic-2ga':             'Mythic Item (2GA)',
-    'chaos-unique-2ga':       'Chaos Unique (2GA)',
-    'grandpapa-bonus':        'Grandpapa Bonus',
-    'mythic-3ga':             'Mythic Item (3GA)',
-    'ancestral-unique-4ga':   'Ancestral Unique (4GA)',
-    'mythic-4ga':             'Mythic Item (4GA)',
-    'chaos-unique-3ga':       'Chaos Unique (3GA)',
+    'legendary-item':   'Legendary (Non GA)', 'unique-item':      'Unique',    'rare-1ga':         'Rare 1GA', 'legendary-1ga':    'Legendary 1GA', 'unique-1ga':       'Unique 1GA',       'pre-torment-set':  'Pre-Torment Set (Charm)', 'tower-500':        'Tower Rank Top-500', 'journey-4':        'Season Journey Rank: IV',
+    'rare-2ga':         'Rare 2GA', 'legendary-2ga':    'Legendary 2GA', 'unique-2ga':       'Unique 2GA',       'legendary-rune':   'Legendary Rune',   'pit-50':           'Solo Pit 50',              'echoing-50':       'Solo Echoing Hatred 50',   'torment-set':      'Torment Set Item', 'tower-250':        'Tower Rank Top-250', 'journey-5':        'Season Journey Rank: V', 'paragon-225':      'Paragon Lvl 225',
+    'rare-3ga':         'Rare 3GA', 'legendary-3ga':    'Legendary 3GA', 'unique-3ga':       'Unique 3GA',       'mythic-1ga':       'Mythic 1GA',       'pit-100':          'Solo Pit 100',             'echoing-100':      'Solo Echoing Hatred 100',  'journey-6':        'Season Journey Rank: VI', 'paragon-250':      'Paragon Lvl 250',
+    'rare-4ga':         'Rare 4GA', 'legendary-4ga':    'Legendary 4GA', 'unique-4ga':       'Unique 4GA',       'mythic-2ga':       'Mythic 2GA',       'paragon-275':      'Paragon Lvl 275',
+    'mythic-3ga':       'Mythic 3GA',    'journey-9':        'Season Journey Rank: IX', 'paragon-300':      'Paragon Lvl 300',
+    'mythic-4ga':       'Mythic 4GA',
 };
 
 const ACHIEVEMENT_ICONS = {
@@ -926,7 +909,7 @@ async function handleDiscordWelcome(env) {
             },
             { 
                 name: '🪙 Point System', 
-                value: '• **1 Point**: Legendaries, Uniques, 2GA Items.\n• **2 Points**: 3GA Items, Mythic Items (No Cache).\n• **3 Points**: 4GA Items, Mythic Items (with GA).', 
+                value: '• **1 Point**: Legendaries, Uniques, 1GA Items, Tower Top-500, Journey IV.\n• **2 Points**: 2GA Items, Solo Pit 50, Paragon 225, Legendary Runes.\n• **3 Points**: 3GA Items, Mythic 1GA, Solo Pit 100, Paragon 250.\n• **4-10 Points**: 4GA Items, Mythic 2-4GA, Paragon 300, End-game Conquests.', 
                 inline: true 
             },
             { 
