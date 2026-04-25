@@ -24,25 +24,25 @@ const appState = {
 
 // ── ACHIEVEMENT TEMPLATES ────────────────────────────────────────
 const achievementTemplates = {
-    'legendary-item':         { name: 'Legendary Item',           rarity: 'legendary', points: 1, icon: '🪙', description: 'First to obtain a Legendary quality item this season.' },
+    'legendary-item':         { name: 'Legendary Item',           rarity: 'legendary', points: 1, icon: '🌕', description: 'First to obtain a Legendary quality item this season.' },
     'ancestral-legendary':    { name: 'Ancestral Legendary',      rarity: 'ancestral', points: 1, icon: '⚔️', description: 'First ancestral legendary item claimed from the depths.' },
-    'unique-item':            { name: 'Unique Item',              rarity: 'unique',    points: 1, icon: '👑', description: 'First unique item drop — a rare blessing from the heavens.' },
-    'ancestral-unique':       { name: 'Ancestral Unique',         rarity: 'ancestral', points: 1, icon: '⚔️', description: 'First ancestral unique — power beyond mortal comprehension.' },
-    'ancestral-legendary-2ga':{ name: 'Ancestral Legendary (2GA)',rarity: 'ancestral', points: 1, icon: '⚔️', description: 'An ancestral legendary bearing two greater affixes.' },
-    'ancestral-unique-2ga':   { name: 'Ancestral Unique (2GA)',   rarity: 'ancestral', points: 1, icon: '⚔️', description: 'An ancestral unique item with two greater affixes.' },
+    'unique-item':            { name: 'Unique Item',              rarity: 'unique',    points: 1, icon: '💎', description: 'First unique item drop — a rare blessing from the heavens.' },
+    'ancestral-unique':       { name: 'Ancestral Unique',         rarity: 'ancestral', points: 1, icon: '🔮', description: 'First ancestral unique — power beyond mortal comprehension.' },
+    'ancestral-legendary-2ga':{ name: 'Ancestral Legendary (2GA)',rarity: 'ancestral', points: 1, icon: '🔱', description: 'An ancestral legendary bearing two greater affixes.' },
+    'ancestral-unique-2ga':   { name: 'Ancestral Unique (2GA)',   rarity: 'ancestral', points: 1, icon: '💠', description: 'An ancestral unique item with two greater affixes.' },
     'chaos-unique-1ga':       { name: 'Chaos Unique (1GA)',       rarity: 'chaos',     points: 1, icon: '🌀', description: 'A chaos unique with one greater affix — born from Lilith\'s will.' },
     'any-1ga-item':           { name: 'Any 1GA Item',             rarity: 'legendary', points: 1, icon: '✨', description: 'Any item bearing a single greater affix — the mark of superiority.' },
-    'ancestral-unique-3ga':   { name: 'Ancestral Unique (3GA)',   rarity: 'ancestral', points: 2, icon: '⚔️', description: 'An ancestral unique armed with three greater affixes.' },
-    'ancestral-legendary-3ga':{ name: 'Ancestral Legendary (3GA)',rarity: 'ancestral', points: 2, icon: '⚔️', description: 'An ancestral legendary bearing three greater affixes.' },
-    'mythic-1ga':             { name: 'Mythic Item (1GA)',        rarity: 'mythic',    points: 2, icon: '✨', description: 'First mythic item with a greater affix — worthy of legend.' },
-    'mythic-no-cache':        { name: 'Mythic Item (No Cache)',   rarity: 'mythic',    points: 2, icon: '✨', description: 'A mythic item obtained without cache — raw power earned.' },
-    'mythic-2ga':             { name: 'Mythic Item (2GA)',        rarity: 'mythic',    points: 2, icon: '✨', description: 'A mythic item bearing two greater affixes.' },
-    'chaos-unique-2ga':       { name: 'Chaos Unique (2GA)',       rarity: 'chaos',     points: 2, icon: '🌀', description: 'A chaos unique with two greater affixes. Chaos incarnate.' },
-    'grandpapa-bonus':        { name: 'Grandpapa Bonus',          rarity: 'unique',    points: 2, icon: '👑', description: 'A special bonus achievement for remarkable contribution.' },
-    'mythic-3ga':             { name: 'Mythic Item (3GA)',        rarity: 'mythic',    points: 3, icon: '✨', description: 'A mythic item with three greater affixes — near perfect power.' },
-    'ancestral-unique-4ga':   { name: 'Ancestral Unique (4GA)',   rarity: 'ancestral', points: 3, icon: '⚔️', description: 'An ancestral unique with four greater affixes — perfection achieved.' },
-    'mythic-4ga':             { name: 'Mythic Item (4GA)',        rarity: 'mythic',    points: 3, icon: '✨', description: 'A mythic item with four greater affixes — absolute dominion.' },
-    'chaos-unique-3ga':       { name: 'Chaos Unique (3GA)',       rarity: 'chaos',     points: 3, icon: '🌀', description: 'A chaos unique bearing three greater affixes — true chaos unleashed.' },
+    'ancestral-unique-3ga':   { name: 'Ancestral Unique (3GA)',   rarity: 'ancestral', points: 2, icon: '💠', description: 'An ancestral unique armed with three greater affixes.' },
+    'ancestral-legendary-3ga':{ name: 'Ancestral Legendary (3GA)',rarity: 'ancestral', points: 2, icon: '🔱', description: 'An ancestral legendary bearing three greater affixes.' },
+    'mythic-1ga':             { name: 'Mythic Item (1GA)',        rarity: 'mythic',    points: 2, icon: '⛩️', description: 'First mythic item with a greater affix — worthy of legend.' },
+    'mythic-no-cache':        { name: 'Mythic Item (No Cache)',   rarity: 'mythic',    points: 2, icon: '⛩️', description: 'A mythic item obtained without cache — raw power earned.' },
+    'mythic-2ga':             { name: 'Mythic Item (2GA)',        rarity: 'mythic',    points: 2, icon: '⛩️', description: 'A mythic item bearing two greater affixes.' },
+    'chaos-unique-2ga':       { name: 'Chaos Unique (2GA)',       rarity: 'chaos',     points: 2, icon: '🌪️', description: 'A chaos unique with two greater affixes. Chaos incarnate.' },
+    'grandpapa-bonus':        { name: 'Grandpapa Bonus',          rarity: 'unique',    points: 2, icon: '👴', description: 'A special bonus achievement for remarkable contribution.' },
+    'mythic-3ga':             { name: 'Mythic Item (3GA)',        rarity: 'mythic',    points: 3, icon: '⛩️', description: 'A mythic item with three greater affixes — near perfect power.' },
+    'ancestral-unique-4ga':   { name: 'Ancestral Unique (4GA)',   rarity: 'ancestral', points: 3, icon: '💠', description: 'An ancestral unique with four greater affixes — perfection achieved.' },
+    'mythic-4ga':             { name: 'Mythic Item (4GA)',        rarity: 'mythic',    points: 3, icon: '⛩️', description: 'A mythic item with four greater affixes — absolute dominion.' },
+    'chaos-unique-3ga':       { name: 'Chaos Unique (3GA)',       rarity: 'chaos',     points: 3, icon: '🌋', description: 'A chaos unique bearing three greater affixes — true chaos unleashed.' },
 };
 
 // ── SAMPLE DATA (fallback) ────────────────────────────────────────
@@ -405,6 +405,10 @@ function enterSeason(season, silentRefresh = false) {
     renderLeaderboard();
     renderAchievements();
     populateRecordForm();
+
+    // Default to Bingo tab if active, else Leaderboard
+    const defaultTab = season.status === 'active' ? 'bingo' : 'leaderboard';
+    switchTab(defaultTab);
 
     if (!silentRefresh) {
         const landing = document.getElementById('landingScreen');
@@ -967,29 +971,29 @@ function formatDate(dateStr) {
 ═══════════════════════════════════════════════════════════════ */
 const BINGO_DEFINITIONS = [
     { tier: 1, pts: 1, items: [
-        { type:'legendary-item',         name:'Legendary Item',           icon:'🪙', rarity:'legendary'  },
+        { type:'legendary-item',         name:'Legendary Item',           icon:'🌕', rarity:'legendary'  },
         { type:'ancestral-legendary',    name:'Ancestral Legendary',      icon:'⚔️', rarity:'ancestral'  },
-        { type:'unique-item',            name:'Unique Item',              icon:'💠', rarity:'unique'      },
+        { type:'unique-item',            name:'Unique Item',              icon:'💎', rarity:'unique'      },
         { type:'ancestral-unique',       name:'Ancestral Unique',         icon:'🔮', rarity:'ancestral'  },
-        { type:'ancestral-legendary-2ga',name:'Ancestral Legendary (2GA)',icon:'⚔️', rarity:'ancestral'  },
-        { type:'ancestral-unique-2ga',   name:'Ancestral Unique (2GA)',   icon:'🔮', rarity:'ancestral'  },
+        { type:'ancestral-legendary-2ga',name:'Ancestral Legendary (2GA)',icon:'🔱', rarity:'ancestral'  },
+        { type:'ancestral-unique-2ga',   name:'Ancestral Unique (2GA)',   icon:'💠', rarity:'ancestral'  },
         { type:'chaos-unique-1ga',       name:'Chaos Unique (1GA)',       icon:'🌀', rarity:'chaos'       },
         { type:'any-1ga-item',           name:'Any 1GA Item',             icon:'✨', rarity:'legendary'  },
     ]},
     { tier: 2, pts: 2, items: [
-        { type:'ancestral-unique-3ga',   name:'Ancestral Unique (3GA)',   icon:'🔮', rarity:'ancestral'  },
-        { type:'ancestral-legendary-3ga',name:'Ancestral Legendary (3GA)',icon:'⚔️', rarity:'ancestral'  },
-        { type:'mythic-no-cache',        name:'Mythic (No Cache)',        icon:'🌟', rarity:'mythic'      },
-        { type:'mythic-1ga',             name:'Mythic Item (1GA)',        icon:'🌟', rarity:'mythic'      },
-        { type:'mythic-2ga',             name:'Mythic Item (2GA)',        icon:'🌟', rarity:'mythic'      },
-        { type:'chaos-unique-2ga',       name:'Chaos Unique (2GA)',       icon:'🌀', rarity:'chaos'       },
-        { type:'grandpapa-bonus',        name:'Grandpapa Bonus',          icon:'👑', rarity:'unique'      },
+        { type:'ancestral-unique-3ga',   name:'Ancestral Unique (3GA)',   icon:'💠', rarity:'ancestral'  },
+        { type:'ancestral-legendary-3ga',name:'Ancestral Legendary (3GA)',icon:'🔱', rarity:'ancestral'  },
+        { type:'mythic-no-cache',        name:'Mythic (No Cache)',        icon:'⛩️', rarity:'mythic'      },
+        { type:'mythic-1ga',             name:'Mythic Item (1GA)',        icon:'⛩️', rarity:'mythic'      },
+        { type:'mythic-2ga',             name:'Mythic Item (2GA)',        icon:'⛩️', rarity:'mythic'      },
+        { type:'chaos-unique-2ga',       name:'Chaos Unique (2GA)',       icon:'🌪️', rarity:'chaos'       },
+        { type:'grandpapa-bonus',        name:'Grandpapa Bonus',          icon:'👴', rarity:'unique'      },
     ]},
     { tier: 3, pts: 3, items: [
-        { type:'mythic-3ga',             name:'Mythic Item (3GA)',        icon:'🌟', rarity:'mythic'      },
-        { type:'ancestral-unique-4ga',   name:'Ancestral Unique (4GA)',   icon:'🔮', rarity:'ancestral'  },
-        { type:'mythic-4ga',             name:'Mythic Item (4GA)',        icon:'🌟', rarity:'mythic'      },
-        { type:'chaos-unique-3ga',       name:'Chaos Unique (3GA)',       icon:'🌀', rarity:'chaos'       },
+        { type:'mythic-3ga',             name:'Mythic Item (3GA)',        icon:'⛩️', rarity:'mythic'      },
+        { type:'ancestral-unique-4ga',   name:'Ancestral Unique (4GA)',   icon:'💠', rarity:'ancestral'  },
+        { type:'mythic-4ga',             name:'Mythic Item (4GA)',        icon:'⛩️', rarity:'mythic'      },
+        { type:'chaos-unique-3ga',       name:'Chaos Unique (3GA)',       icon:'🌋', rarity:'chaos'       },
     ]},
 ];
 
@@ -1043,13 +1047,27 @@ function renderBingoBoard() {
             const claimed  = !!winner;
             const claimable = !claimed && !isClosed;
 
-            html += `<div class="bingo-cell ${claimed ? 'claimed' : 'unclaimed'} rarity-${def.rarity}"
-                         data-type="${def.type}" data-pts="${tier.pts}" data-name="${escHtml(def.name)}">
-                <div class="bingo-cell-icon">${def.icon}</div>
-                <div class="bingo-cell-name">${escHtml(def.name)}</div>
-                <div class="bingo-cell-pts">${tier.pts} ${tier.pts === 1 ? 'point' : 'points'}</div>
-                ${winner  ? `<div class="bingo-cell-winner">${escHtml(winner)}</div>` : ''}
-                ${claimable ? `<button class="bingo-claim-btn" data-type="${def.type}" data-name="${escHtml(def.name)}">🎯 Claim</button>` : ''}
+            html += `
+            <div class="bingo-cell ${claimed ? 'claimed' : 'unclaimed'} rarity-${def.rarity}"
+                 data-type="${def.type}" data-pts="${tier.pts}" data-name="${escHtml(def.name)}">
+                <div class="bingo-cell-inner">
+                    <div class="bingo-cell-icon">${def.icon}</div>
+                    <div class="bingo-cell-name">${escHtml(def.name)}</div>
+                    <div class="bingo-cell-pts">🪙 ${tier.pts} Pt${tier.pts > 1 ? 's' : ''}</div>
+                    
+                    ${winner ? `
+                        <div class="bingo-cell-status">
+                            <div class="bingo-winner-seal">CLAIMED</div>
+                            <div class="bingo-cell-winner">${escHtml(winner)}</div>
+                        </div>
+                    ` : `
+                        <div class="bingo-cell-status">
+                            ${claimable ? `<button class="bingo-claim-btn" data-type="${def.type}" data-name="${escHtml(def.name)}">
+                                <span class="btn-seal">⚔️</span> CLAIM
+                            </button>` : '<span class="status-locked">LOCKED</span>'}
+                        </div>
+                    `}
+                </div>
             </div>`;
         }
         html += `</div></div>`;

@@ -599,16 +599,14 @@ body {
 .empty-state p { font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.1em; }
 
 /* ═══════════════════════════════════════════════════════════════
-   BINGO BOARD
+   BINGO BOARD 2.0
 ═══════════════════════════════════════════════════════════════ */
-.bingo-board {
-    display: flex; flex-direction: column; gap: 2.5rem;
-}
-.bingo-tier { display: flex; flex-direction: column; gap: 1rem; }
+.bingo-tier { margin-bottom: 4rem; width: 100%; }
 .bingo-tier-header {
-    display: flex; align-items: center; gap: 1rem;
-    font-family: 'Cinzel', serif; font-size: 0.75rem; font-weight: 700;
-    letter-spacing: 0.3em; text-transform: uppercase; color: var(--ember-gold);
+    display: flex; align-items: center; justify-content: center;
+    gap: 1.5rem; margin-bottom: 2.5rem;
+    font-family: 'Cinzel', serif; font-weight: 700;
+    color: var(--ember-gold); letter-spacing: 0.2em; text-transform: uppercase;
 }
 .bingo-tier-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(201,168,76,0.4), transparent); }
 .bingo-tier-pts  { color: var(--ember-gold); }
