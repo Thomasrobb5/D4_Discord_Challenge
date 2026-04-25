@@ -414,7 +414,91 @@ body {
 .user-name { font-family: 'Cinzel', serif; font-size: 0.72rem; font-weight: 700; color: var(--text-bright); }
 .user-tag { font-size: 0.55rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
 
-/* ── SITE HEADER ── */
+/* ── CHARACTER SHEET (Profile Modal) ── */
+.profile-sheet {
+    background: linear-gradient(180deg, #1a0a2e 0%, #07050f 100%);
+    border: 1px solid var(--border-gold);
+    max-width: 480px !important;
+    padding: 2.5rem !important;
+    box-shadow: 0 0 50px rgba(201,168,76,0.15), inset 0 0 20px rgba(0,0,0,0.8);
+}
+
+.profile-header {
+    display: flex; align-items: center; gap: 1.5rem;
+    margin-bottom: 2rem; padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+}
+
+.profile-avatar-wrap { position: relative; }
+.p-modal-avatar {
+    width: 80px; height: 80px; border-radius: 50%;
+    border: 3px solid var(--ember-gold);
+    box-shadow: 0 0 20px var(--glow-gold);
+}
+.profile-level-badge {
+    position: absolute; bottom: -5px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--blood-red); color: #fff;
+    font-size: 0.55rem; font-weight: 900;
+    padding: 2px 8px; border-radius: 10px;
+    border: 1px solid var(--ember-gold);
+    white-space: nowrap;
+}
+
+.p-modal-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.6rem; color: var(--text-bright);
+    margin-bottom: 0.25rem; text-shadow: 0 0 15px var(--glow-gold);
+}
+.p-modal-class {
+    font-family: 'Cinzel', serif; font-size: 0.85rem;
+    color: var(--ember-gold); letter-spacing: 0.1em;
+}
+
+.profile-stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+    margin-bottom: 2rem;
+}
+.p-stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 1rem 0.5rem; text-align: center; border-radius: var(--r-md);
+}
+.p-stat-label { font-size: 0.6rem; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.5rem; }
+.p-stat-value { font-family: 'Cinzel', serif; font-size: 1.2rem; font-weight: 700; color: var(--text-bright); }
+
+.p-section-title {
+    font-family: 'Cinzel', serif; font-size: 0.75rem;
+    color: var(--text-mid); text-transform: uppercase;
+    letter-spacing: 0.2em; margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: 1rem;
+}
+.p-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+
+.badge-gallery {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 1rem;
+}
+.badge-item {
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    opacity: 0.4; filter: grayscale(1); transition: all 0.3s;
+}
+.badge-item.earned { opacity: 1; filter: grayscale(0); }
+
+.badge-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+}
+.badge-item.earned .badge-icon {
+    border-color: var(--ember-gold);
+    background: radial-gradient(circle, rgba(201,168,76,0.2) 0%, transparent 70%);
+    box-shadow: 0 0 15px var(--glow-gold);
+}
+.badge-label { font-size: 0.55rem; text-align: center; color: var(--text-dim); line-height: 1.2; }
+.badge-item.earned .badge-label { color: var(--text-bright); }
+
+/* ── HEADER ── */
 .site-header {
     position: sticky; top: 0; z-index: 200; height: var(--header-h);
     background: linear-gradient(180deg, rgba(7,5,15,0.97) 0%, rgba(10,5,20,0.94) 100%);

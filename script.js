@@ -47,6 +47,13 @@ const achievementTemplates = {
     'chaos-unique-3ga':       { name: 'Chaos Unique (3GA)',       rarity: 'chaos',     points: 3, icon: '🌋', description: 'A chaos unique bearing three greater affixes — true chaos unleashed.' },
 };
 
+const BADGE_DEFS = {
+    'the-founder':  { name: 'The Founder',  icon: '⚔️', desc: 'A pioneer of the Hall of Legends, present at the expansion launch.' },
+    'mythic-hunter':{ name: 'Mythic Hunter', icon: '⛩️', desc: 'Has obtained a Mythic item from the depths of Sanctuary.' },
+    'top-3-legend': { name: 'Top 3 Legend',  icon: '👑', desc: 'Finished a season on the podium of the gods.' },
+    'veteran-s12':  { name: 'S12 Veteran',   icon: '🛡️', desc: 'Contributed significantly during the Season of Slaughter.' }
+};
+
 // ── SAMPLE DATA (fallback) ────────────────────────────────────────
 const SAMPLE_DATA = {
     players: [
@@ -536,7 +543,7 @@ function renderLbTable(players) {
             </div>
             <div class="col-class lb-class">${escHtml(player.class || '—')}</div>
             <div class="col-points lb-points">${player.seasonPoints}<span>pts</span></div>
-            <div class="col-ach lb-ach">🎖 ${player.seasonAchCount}</div>
+            <div class="col-ach lb-ach">🎖 ${player.seasonAchCount} ${renderBadgeIcons(player.badges)}</div>
         `;
         list.appendChild(row);
     });
@@ -1358,9 +1365,9 @@ function renderUserProfile() {
     `;
 
     getEl('userMenuBtn')?.addEventListener('click', () => {
-        if (confirm('Do you want to log out?')) {
-            logout();
-        }
+        openProfileModal(appState.user.id); //
+
+
     });
 }
 
@@ -1371,3 +1378,52 @@ function logout() {
     renderUserProfile();
     initDataFromAPI(); // Refresh data to clear personal state
 }
+
+function renderBadgeIcons(badges) {
+    if (!badges || badges.length === 0) return '';
+    return badges.map(b => {
+        const def = BADGE_DEFS[b];
+        if (!def) return '';
+        return `<span class="lb-badge-icon" title="${def.name}: ${def.desc}">${def.icon}</span>`;
+    }).join('');
+}
+
+function openProfileModal(playerId) {
+    const player = appState.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const modal = getEl('profileModal');
+    if (!modal) return;
+
+    // Set Avatar
+    const avatarUrl = player.avatar 
+        ? `https://cdn.discordapp.com/avatars/${player.discord_id}/${player.avatar}.png`
+        : `https://cdn.discordapp.com/embed/avatars/${parseInt(player.discord_id || 0) % 5}.png`;
+    
+    getEl('p-modal-avatar').src = avatarUrl;
+    getEl('p-modal-name').textContent = player.name;
+    getEl('p-modal-class').textContent = player.class || 'Unknown Class';
+    getEl('p-modal-points').textContent = player.totalPoints;
+    getEl('p-modal-ach').textContent = player.achievements;
+
+    // Calculate Global Rank
+    const sorted = [...appState.players].sort((a,b) => b.totalPoints - a.totalPoints);
+    const rank = sorted.findIndex(p => p.id === player.id) + 1;
+    getEl('p-modal-rank').textContent = `#${rank}`;
+
+    // Badges
+    const badgeGallery = getEl('p-modal-badges');
+    badgeGallery.innerHTML = Object.keys(BADGE_DEFS).map(type => {
+        const def = BADGE_DEFS[type];
+        const earned = player.badges?.includes(type);
+        return `
+            <div class="badge-item ${earned ? 'earned' : ''}" title="${def.desc}">
+                <div class="badge-icon">${def.icon}</div>
+                <div class="badge-label">${def.name}</div>
+            </div>
+        `;
+    }).join('');
+
+    modal.style.display = 'flex';
+}
+

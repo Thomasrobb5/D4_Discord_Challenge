@@ -1056,6 +1056,7 @@ async function handleAuthCallback(request, env, origin) {
         const res = await env.DB.prepare('INSERT INTO players (name, discord_id, avatar) VALUES (?, ?, ?)')
             .bind(discordUser.username, discordUser.id, discordUser.avatar).run();
         player = { id: res.meta.last_row_id, name: discordUser.username, discord_id: discordUser.id };
+        await env.DB.prepare('INSERT INTO badges (player_id, badge_type) VALUES (?, ?)').bind(player.id, 'the-founder').run().catch(() => {});
     } else {
         // Update avatar if changed
         await env.DB.prepare('UPDATE players SET avatar = ? WHERE id = ?').bind(discordUser.avatar, player.id).run();

@@ -472,9 +472,54 @@
             </div>
         </div>
 
-        <!-- ═══════════════════════════════════════════════════════
-             ADMIN UNLOCK MODAL
-        ═══════════════════════════════════════════════════════ -->
+    <!-- ─── PROFILE MODAL (Character Sheet) ─── -->
+    <div id="profileModal" class="modal-overlay" style="display:none">
+        <div class="modal-box profile-sheet">
+            <button class="modal-close-btn" onclick="closeModal('profileModal')">&times;</button>
+            <div class="profile-header">
+                <div class="profile-avatar-wrap">
+                    <img id="p-modal-avatar" src="" alt="Avatar" class="p-modal-avatar">
+                    <div class="profile-level-badge">LVL 100</div>
+                </div>
+                <div class="profile-title-block">
+                    <h2 id="p-modal-name" class="p-modal-name">—</h2>
+                    <div id="p-modal-class" class="p-modal-class">—</div>
+                </div>
+            </div>
+
+            <div class="profile-stats-grid">
+                <div class="p-stat-card">
+                    <div class="p-stat-label">Total Glory</div>
+                    <div id="p-modal-points" class="p-stat-value">0</div>
+                </div>
+                <div class="p-stat-card">
+                    <div class="p-stat-label">Achievements</div>
+                    <div id="p-modal-ach" class="p-stat-value">0</div>
+                </div>
+                <div class="p-stat-card">
+                    <div class="p-stat-label">Global Rank</div>
+                    <div id="p-modal-rank" class="p-stat-value">#—</div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h3 class="p-section-title">Achievements of Renown</h3>
+                <div id="p-modal-badges" class="badge-gallery">
+                    <!-- Badges injected here -->
+                </div>
+            </div>
+
+            <div class="profile-footer">
+                <button class="btn-discord-login" style="background:#c0392b;width:100%;justify-content:center" onclick="logout()">
+                    Logout of Sanctuary
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         ADMIN UNLOCK MODAL
+    ═══════════════════════════════════════════════════════ -->
         <div id="adminUnlockModal" class="modal-overlay admin-unlock-overlay" role="dialog" aria-modal="true">
             <div class="modal-box admin-unlock-box">
                 <button class="modal-close-btn" id="adminUnlockClose" aria-label="Close">&times;</button>
