@@ -65,31 +65,33 @@ A complete, production-ready Diablo 4 achievement tracker with full-stack archit
 
 ## 🔑 Key Features Implemented
 
+### 🛡️ Discord Identity & Social (v2.1.0)
+✅ **Discord OAuth2 Login**: Personalize your profile and claim your legacy.
+✅ **Character Sheets**: Interactive profile modals showing personal stats and history.
+✅ **Legacy Badge System**: Collect permanent badges for seasonal achievements.
+✅ **Live Achievement Ticker**: Real-time scrolling news of the latest epic drops.
+
 ### Frontend (index.html / script.js / styles.css)
-✅ Responsive dark theme with purple/gold accents
-✅ 3 main tabs: Leaderboard, Achievements, Seasons
+✅ Responsive dark theme with ritualistic gold/blood accents
+✅ **Bingo Board v2.0**: Interactive grid with rarity-based glowing seals
+✅ 4 main tabs: Leaderboard, Bingo, Achievements, All Time
 ✅ Live leaderboard with ranking medals (🥇🥈🥉)
 ✅ Achievement gallery with filtering (by points, rarity, search)
-✅ Seasonal comparison view
-✅ Modal popup for achievement details
-✅ Player search functionality
-✅ Atmospheric fog background animation
+✅ Modal popups for profile and achievement details
 ✅ Mobile-responsive layout
-✅ Sample data included for testing
 
 ### Backend (worker.js)
-✅ GET /api/data - Returns all players, achievements, seasons
-✅ GET /api/leaderboard - Returns ranked leaderboard
+✅ **JWT Session Security**: Secure stateless authentication
+✅ GET /api/data - Returns all contextual data (players, achievements, user session)
+✅ GET /api/auth/login & callback - Full OAuth2 handshake
 ✅ POST /api/achievements - Creates new achievement with validation
 ✅ POST /discord-webhook - Sends rich embeds to Discord
-✅ CORS headers for Pages integration
-✅ Error handling and validation
-✅ Automatic point calculation
 
-### Database (database-schema.sql)
-✅ Players table (id, name, discord_id, created_at)
+### Database (D1)
+✅ Players table (id, name, discord_id, avatar, created_at)
 ✅ Achievements table (player_id, type, points, season, timestamp)
-✅ Seasons table (name, slug, status, dates)
+✅ Badges table (player_id, badge_type, awarded_at)
+✅ Seasons table (name, slug, status, dates, challenges_config)
 ✅ Indexes for performance optimization
 ✅ Sample data pre-populated
 ✅ Foreign key constraints
