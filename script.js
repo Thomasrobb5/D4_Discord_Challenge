@@ -282,6 +282,7 @@ async function initDataFromAPI() {
             if (data.achievements) appState.achievements = data.achievements;
             if (data.seasons)      appState.seasons      = data.seasons;
             console.info('✅ Live data loaded from Cloudflare Worker.');
+            renderTicker();
         }
     } catch (_) {
         console.info('ℹ️  API unavailable — using sample data.');
@@ -404,6 +405,7 @@ function enterSeason(season, silentRefresh = false) {
     updateHeroBar();
     renderLeaderboard();
     renderAchievements();
+    renderTicker();
     populateRecordForm();
 
     // Default to Bingo tab if active, else Leaderboard
@@ -1079,6 +1081,51 @@ function renderBingoBoard() {
     board.querySelectorAll('.bingo-claim-btn').forEach(btn => {
         btn.addEventListener('click', () => openBingoClaim(btn.dataset.type, btn.dataset.name));
     });
+}
+
+/* ─── Ticker Logic ────────────────────────────────────────── */
+function renderTicker() {
+    const scrollEl = getEl('tickerScroll');
+    if (!scrollEl) return;
+
+    const season = appState.currentSeason;
+    if (!season) {
+        scrollEl.innerHTML = '<div class="ticker-item">Awaiting seasonal conquests...</div>';
+        return;
+    }
+
+    // Get recent 10 achievements for current season
+    const recent = appState.achievements
+        .filter(a => a.season === season.slug)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 10);
+
+    if (recent.length === 0) {
+        scrollEl.innerHTML = `<div class="ticker-item">Season ${season.number} has begun. Who will be the first to claim glory?</div>`;
+        return;
+    }
+
+    // Create the content string (repeated twice for infinite loop)
+    const itemsHtml = recent.map(a => {
+        const date = new Date(a.timestamp);
+        const time = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        const name = achievementTemplates[a.type]?.name || a.type;
+        return `
+            <div class="ticker-item">
+                <span class="t-time">[${time}]</span>
+                <span class="t-player">${escHtml(a.playerName)}</span>
+                <span class="t-action">claimed ${escHtml(name)}!</span>
+                <span class="t-divider">☩</span>
+            </div>
+        `;
+    }).join('');
+
+    // Duplicate for seamless loop
+    scrollEl.innerHTML = itemsHtml + itemsHtml;
+    
+    // Adjust animation speed based on content length
+    const duration = Math.max(20, recent.length * 10);
+    scrollEl.style.animationDuration = `${duration}s`;
 }
 
 /* ─── Bingo Claim Modal ──────────────────────────────────── */
