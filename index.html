@@ -5,12 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diablo IV — Hall of Legends</title>
     <meta name="description" content="Track your dominance across Diablo IV seasons. Compete, conquer, and claim your place in the Hall of Legends.">
+    <!-- Open Graph / social sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Diablo IV — Hall of Legends">
+    <meta property="og:description" content="Track your dominance across Diablo IV seasons. Compete, conquer, and claim your place in the Hall of Legends.">
+    <meta property="og:image" content="Diablo_IV_2019_nosmoke_logo.webp">
+    <!-- Favicon (using the logo) -->
+    <link rel="icon" type="image/webp" href="Diablo_IV_2019_nosmoke_logo.webp">
+    <link rel="apple-touch-icon" href="Diablo_IV_2019_nosmoke_logo.webp">
+    <meta name="theme-color" content="#8b0000">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- Thin top-of-page loading bar -->
+    <style>
+    #pageLoader { position:fixed; top:0; left:0; width:100%; height:3px; z-index:9999;
+        background:linear-gradient(90deg,var(--blood-red,#8b0000),var(--ember-gold,#c9a84c));
+        animation:loaderSlide 1.4s ease-in-out infinite; pointer-events:none; }
+    #pageLoader.done { animation:loaderFade 0.5s ease forwards; }
+    @keyframes loaderSlide { 0%{transform:translateX(-100%);} 100%{transform:translateX(100%);} }
+    @keyframes loaderFade  { to{opacity:0; visibility:hidden;} }
+    </style>
 </head>
 <body>
+    <!-- Top loading bar -->
+    <div id="pageLoader"></div>
 
     <!-- ── CINEMATIC BACKGROUND ── -->
     <div class="bg-scene">
@@ -458,7 +478,7 @@
             <div class="footer-inner">
                 <img src="Diablo_IV_2019_nosmoke_logo.webp" alt="Diablo IV" class="footer-logo">
                 <p class="footer-text">Conquer the darkness. Claim your glory. Season awaits. ⚔</p>
-                <p class="footer-copy">© 2025 Diablo IV Hall of Legends — Fan Project</p>
+                <p class="footer-copy">&copy; <span id="footerYear"></span> Diablo IV Hall of Legends — Fan Project</p>
                 <p class="footer-copy" style="font-size:0.65rem;opacity:0.45;margin-top:0.25rem;letter-spacing:0.1em">
                     v2.1.0 &nbsp;·&nbsp; Built Apr 2026
                 </p>

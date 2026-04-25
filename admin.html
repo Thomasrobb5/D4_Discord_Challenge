@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin — Diablo IV Hall of Legends</title>
+    <link rel="icon" type="image/webp" href="Diablo_IV_2019_nosmoke_logo.webp">
+    <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -591,6 +593,14 @@ const API_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:8787/api'
     : 'https://diablo4-hof.thomasrobb5.workers.dev/api';
 
+// XSS helper
+function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 const POINT_MAP = {
     'legendary-item':1,'ancestral-legendary':1,'unique-item':1,'ancestral-unique':1,
     'ancestral-legendary-2ga':1,'ancestral-unique-2ga':1,'chaos-unique-1ga':1,'any-1ga-item':1,
@@ -605,6 +615,19 @@ const RARITY_MAP = {
     'ancestral-legendary-3ga':'ancestral','mythic-1ga':'mythic','mythic-no-cache':'mythic',
     'mythic-2ga':'mythic','chaos-unique-2ga':'chaos','grandpapa-bonus':'unique',
     'mythic-3ga':'mythic','ancestral-unique-4ga':'ancestral','mythic-4ga':'mythic','chaos-unique-3ga':'chaos',
+};
+
+const ACHIEVEMENT_NAMES = {
+    'legendary-item':'Legendary Item','ancestral-legendary':'Ancestral Legendary',
+    'unique-item':'Unique Item','ancestral-unique':'Ancestral Unique',
+    'ancestral-legendary-2ga':'Ancestral Legendary (2GA)','ancestral-unique-2ga':'Ancestral Unique (2GA)',
+    'chaos-unique-1ga':'Chaos Unique (1GA)','any-1ga-item':'Any 1GA Item',
+    'ancestral-unique-3ga':'Ancestral Unique (3GA)','ancestral-legendary-3ga':'Ancestral Legendary (3GA)',
+    'mythic-1ga':'Mythic Item (1GA)','mythic-no-cache':'Mythic (No Cache)',
+    'mythic-2ga':'Mythic Item (2GA)','chaos-unique-2ga':'Chaos Unique (2GA)',
+    'grandpapa-bonus':'Grandpapa Bonus','mythic-3ga':'Mythic Item (3GA)',
+    'ancestral-unique-4ga':'Ancestral Unique (4GA)','mythic-4ga':'Mythic Item (4GA)',
+    'chaos-unique-3ga':'Chaos Unique (3GA)',
 };
 
 let allData = { players: [], achievements: [], seasons: [] };
@@ -803,16 +826,17 @@ function renderHistoryTable() {
     if (!sorted.length) { tbody.innerHTML = '<tr><td colspan="7" style="color:var(--text-dim);text-align:center">No achievements found</td></tr>'; return; }
     tbody.innerHTML = '';
     sorted.forEach(ach => {
-        const rarity = RARITY_MAP[ach.type] || 'legendary';
-        const pts    = POINT_MAP[ach.type] || ach.points || '?';
-        const date   = new Date(ach.timestamp).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+        const rarity   = RARITY_MAP[ach.type] || 'legendary';
+        const pts      = POINT_MAP[ach.type] || ach.points || '?';
+        const achName  = ACHIEVEMENT_NAMES[ach.type] || ach.type;
+        const date     = new Date(ach.timestamp).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td style="color:var(--text-bright);font-weight:600">${ach.playerName}</td>
-            <td>${ach.type}</td>
+            <td style="color:var(--text-bright);font-weight:600">${escHtml(ach.playerName)}</td>
+            <td style="color:var(--text-mid)">${escHtml(achName)}</td>
             <td><span class="rarity-pip rarity-${rarity}"></span>${rarity}</td>
             <td style="color:#c9a84c;font-weight:700">${pts}</td>
-            <td>${ach.season}</td>
+            <td style="color:var(--ash-silver);font-size:0.78rem">${escHtml(ach.season)}</td>
             <td>${date}</td>
             <td><button class="btn btn-danger" onclick="deleteAchievement(${ach.id})">Delete</button></td>
         `;
@@ -842,7 +866,9 @@ function setupTabs() {
             if (pane) pane.classList.add('active');
 
             if (btn.dataset.tab === 'tab-discord') {
-                loadDiscordSettings();
+                // Only auto-load Discord settings if we already have a password stored
+                const pw = $('adminPw')?.value || $('dc-webhook-pw')?.value || '';
+                if (pw) loadDiscordSettings();
             }
         });
     });
@@ -949,25 +975,35 @@ function setupForms() {
 }
 
 async function deletePlayer(id, name) {
-    if (!confirm(`Delete player "${name}"? This will NOT delete their achievements.`)) return;
-    const pw = prompt('Admin password:');
+    if (!confirm(`Delete player "${name}"?\n\nThis will NOT delete their achievements — they will appear as unlinked entries.`)) return;
+    const pw = $('adminPw')?.value || $('p-pw')?.value || prompt('Admin password:');
     if (!pw) return;
     try {
         const res = await fetch(`${API_URL}/players/${id}`, { method:'DELETE', headers:{'X-Admin-Password':pw} });
-        if (res.ok) { alert('Player deleted.'); loadData(); }
-        else        { alert((await res.json()).error || 'Error deleting player.'); }
-    } catch (e) { alert(e.message); }
+        if (res.ok) {
+            showStatus('playerStatus','success',`✓ Player "${name}" deleted.`);
+            await loadData();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            showStatus('playerStatus','error', data.error || 'Error deleting player.');
+        }
+    } catch (e) { showStatus('playerStatus','error', e.message); }
 }
 
 async function deleteAchievement(id) {
     if (!confirm(`Delete achievement ID ${id}? This cannot be undone.`)) return;
-    const pw = prompt('Admin password:');
+    const pw = $('adminPw')?.value || prompt('Admin password:');
     if (!pw) return;
     try {
         const res = await fetch(`${API_URL}/achievements/${id}`, { method:'DELETE', headers:{'X-Admin-Password':pw} });
-        if (res.ok) { loadData(); }
-        else        { alert((await res.json()).error || 'Error deleting achievement.'); }
-    } catch (e) { alert(e.message); }
+        if (res.ok) {
+            showStatus('achStatus','success',`✓ Achievement #${id} deleted.`);
+            await loadData();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            showStatus('achStatus','error', data.error || 'Error deleting achievement.');
+        }
+    } catch (e) { showStatus('achStatus','error', e.message); }
 }
 
 /* ════════════════════════════════════════════════════════════════

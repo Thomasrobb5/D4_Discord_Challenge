@@ -232,6 +232,10 @@ let particles;
 let countdown;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Set footer year dynamically
+    const fyEl = document.getElementById('footerYear');
+    if (fyEl) fyEl.textContent = new Date().getFullYear();
+
     // Particles
     const canvas = document.getElementById('particleCanvas');
     if (canvas) particles = new ParticleEngine(canvas);
@@ -251,6 +255,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Background API upgrade
     initDataFromAPI().then(() => {
+        // Dismiss the loading bar
+        const loader = document.getElementById('pageLoader');
+        if (loader) loader.classList.add('done');
+
         renderSeasonCards();
         setupCountdown(); // Re-run with live end_date from DB
         // If already in main app, silently refresh it
@@ -601,6 +609,12 @@ function openAchievementModal(ach, tmpl) {
     document.body.style.overflow = 'hidden';
 }
 
+function openModal(id) {
+    const el = getEl(id);
+    if (el) el.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
 function closeModal(id = 'achievementModal') {
     const el = getEl(id);
     if (el) el.classList.remove('active');
@@ -799,6 +813,8 @@ function showToast(type, title, msg, duration = 5000) {
     const icons = { success:'✅', error:'❌', info:'ℹ️' };
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
+    toast.style.cursor = 'pointer';
+    toast.title = 'Click to dismiss';
     toast.innerHTML = `
         <div class="toast-icon">${icons[type] || '🔔'}</div>
         <div class="toast-body">
@@ -808,10 +824,12 @@ function showToast(type, title, msg, duration = 5000) {
     `;
     container.appendChild(toast);
 
-    setTimeout(() => {
+    const dismiss = () => {
         toast.classList.add('hiding');
         setTimeout(() => toast.remove(), 350);
-    }, duration);
+    };
+    toast.addEventListener('click', dismiss);
+    setTimeout(dismiss, duration);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -840,7 +858,8 @@ function setupGlobalListeners() {
         }
         const landing = getEl('landingScreen');
         landing.classList.add('fade-out');
-        landing.addEventListener('animationend', () => { landing.style.display = 'none'; }, { once: true });
+        // Use timeout matching the CSS transition (0.9s) rather than animationend
+        setTimeout(() => { landing.style.display = 'none'; }, 900);
         getEl('mainApp').classList.remove('hidden');
         switchTab('alltime');
         window.scrollTo({ top: 0, behavior: 'instant' });
