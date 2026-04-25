@@ -79,6 +79,7 @@ const RARITY_COLORS = {
 
 // ── CORS helpers ────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
+    'https://d4-discord-challenge.pages.dev',
     'https://diablo4-hof-site.pages.dev',
     'http://localhost:3333',
     'http://localhost:8787',
@@ -144,9 +145,11 @@ export default {
 
         try {
             // ── Public routes ────────────────────────────────────
-            if (method === 'GET' && path === '/api/data')         return handleGetData(env);
+            if (method === 'GET' && path === '/api/data')         return handleGetData(env, request);
             if (method === 'GET' && path === '/api/seasons')      return handleGetSeasons(env);
             if (method === 'GET' && path === '/api/leaderboard')  return handleGetLeaderboard(env);
+            if (method === 'GET' && path === '/api/auth/login')   return handleAuthLogin(env, origin);
+            if (method === 'GET' && path === '/api/auth/callback') return handleAuthCallback(request, env, origin);
 
             // ── Players ──────────────────────────────────────────
             if (method === 'POST' && path === '/api/players') {
@@ -237,15 +240,55 @@ export default {
             console.error('Worker error:', e);
             return err(e.message || 'Internal server error', 500);
         }
+    },
+
+    // ── Background Task (Cron) ───────────────────────────────────
+    async scheduled(event, env, ctx) {
+        ctx.waitUntil(handleScheduled(env));
     }
 };
 
 // ════════════════════════════════════════════════════════════════
+// BACKGROUND MANAGEMENT (AUTO-START/END)
+// ════════════════════════════════════════════════════════════════
+async function handleScheduled(env) {
+    console.log('Running background season maintenance...');
+    const nowISO = new Date().toISOString();
+
+    // 1. AUTO-START: Upcoming -> Active
+    const toStart = await env.DB.prepare(
+        'SELECT * FROM seasons WHERE status = "upcoming" AND start_date IS NOT NULL AND start_date <= ?'
+    ).bind(nowISO).all();
+
+    for (const season of toStart.results || []) {
+        console.log(`Auto-activating season: ${season.name}`);
+        await env.DB.prepare('UPDATE seasons SET status = "active" WHERE id = ?').bind(season.id).run();
+        
+        const playersRes = await env.DB.prepare('SELECT name, discord_id FROM players WHERE discord_id IS NOT NULL').all();
+        await fireSeasonStartNotification(env, season, playersRes.results || [])
+            .catch(e => console.error('Auto-activation Discord failed:', e));
+    }
+
+    // 2. AUTO-ARCHIVE: Active -> Completed
+    const toEnd = await env.DB.prepare(
+        'SELECT * FROM seasons WHERE status = "active" AND end_date IS NOT NULL AND end_date <= ?'
+    ).bind(nowISO).all();
+
+    for (const season of toEnd.results || []) {
+        console.log(`Auto-archiving season: ${season.name}`);
+        await env.DB.prepare('UPDATE seasons SET status = "completed" WHERE id = ?').bind(season.id).run();
+        
+        await fireAdminLog(env, `🏁 **Season Ended**: **${season.name}** has reached its end date and is now archived. Check the leaderboard for the final standings!`)
+            .catch(() => {});
+    }
+}
+
+// ════════════════════════════════════════════════════════════════
 // GET /api/data — full payload for the frontend
 // ════════════════════════════════════════════════════════════════
-async function handleGetData(env) {
+async function handleGetData(env, request) {
     const [playersRes, achRes, seasonsRes] = await Promise.all([
-        env.DB.prepare('SELECT * FROM players ORDER BY name').all(),
+        env.DB.prepare('SELECT id, name, class, discord_id, avatar FROM players ORDER BY name').all(),
         env.DB.prepare('SELECT * FROM achievements ORDER BY timestamp DESC').all(),
         env.DB.prepare('SELECT * FROM seasons ORDER BY number DESC').all(),
     ]);
@@ -253,6 +296,18 @@ async function handleGetData(env) {
     const players = playersRes.results;
     const achs    = achRes.results;
     const seasons = seasonsRes.results;
+
+    // Optional: Check if requester is logged in
+    let user = null;
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        user = await verifyJWT(token, env.JWT_SECRET).catch(() => null);
+    }
+
+    // Fetch badges
+    const badgesRes = await env.DB.prepare('SELECT * FROM badges').all();
+    const badges    = badgesRes.results || [];
 
     // Compute per-player stats
     const playerStats = players.map(p => {
@@ -262,8 +317,10 @@ async function handleGetData(env) {
             name:         p.name,
             class:        p.class || 'Unknown',
             discord_id:   p.discord_id,
+            avatar:       p.avatar,
             totalPoints:  mine.reduce((s, a) => s + a.points, 0),
             achievements: mine.length,
+            badges:       badges.filter(b => b.player_id === p.id).map(b => b.badge_type)
         };
     });
 
@@ -300,7 +357,12 @@ async function handleGetData(env) {
         };
     });
 
-    return json({ players: playerStats, achievements, seasons: seasonData });
+    return json({ 
+        players: playerStats, 
+        achievements, 
+        seasons: seasonData,
+        user // session info
+    });
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -357,7 +419,7 @@ async function handleCreatePlayer(request, env) {
         'INSERT INTO players (name, class, discord_id) VALUES (?, ?, ?)'
     ).bind(name, cls, discord_id).run();
 
-    firePlayerAddedNotification(env, { name, class: cls, discord_id }).catch(e => console.error('Player notification failed:', e));
+    await firePlayerAddedNotification(env, { name, class: cls, discord_id }).catch(e => console.error('Player notification failed:', e));
 
     return json({ success: true, id: res.meta.last_row_id }, 201);
 }
@@ -440,7 +502,7 @@ async function handleCreateAchievement(request, env) {
     `).bind(player.id, player.name, achievementType, points, season, notes || null, ts).run();
 
     const seasonInfo = await env.DB.prepare('SELECT name FROM seasons WHERE slug = ?').bind(season).first();
-    fireAchievementNotification(env, {
+    await fireAchievementNotification(env, {
         playerName:      player.name,
         discordId:       player.discord_id,
         achievementType,
@@ -518,7 +580,7 @@ async function handleClaimAchievement(request, env, origin) {
 
     // Fire Discord webhook with @mention
     const seasonRow = await env.DB.prepare('SELECT name FROM seasons WHERE slug = ?').bind(season).first();
-    fireAchievementNotification(env, {
+    await fireAchievementNotification(env, {
         playerName:      player.name,
         discordId:       player.discord_id,
         achievementType, points,
@@ -553,7 +615,7 @@ async function handleCreateSeason(request, env) {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(number, name, slug, status, start_date || null, end_date || null, next_season_start || null, configJson).run();
 
-    fireSeasonAnnouncedNotification(env, { number, name, status, start_date }).catch(e => console.error('Season notification failed:', e));
+    await fireSeasonAnnouncedNotification(env, { number, name, status, start_date }).catch(e => console.error('Season notification failed:', e));
 
     return json({ success: true, id: res.meta.last_row_id }, 201);
 }
@@ -593,12 +655,22 @@ async function handleUpdateSeason(id, request, env) {
         `UPDATE seasons SET ${sets.join(', ')} WHERE id = ?`
     ).bind(...vals).run();
 
-    // If season is being set to active, fire a season-start Discord announcement
-    if (body.status === 'active' && existing.status !== 'active') {
+    // 1. If season is being set to active (from something else)
+    const becameActive = body.status === 'active' && existing.status !== 'active';
+    // 2. If challenges were updated on an ALREADY active season
+    const challengesUpdated = body.challenges_config !== undefined && existing.status === 'active';
+
+    if (becameActive || challengesUpdated) {
         const updated = await env.DB.prepare('SELECT * FROM seasons WHERE id = ?').bind(id).first();
-        const players = await env.DB.prepare('SELECT name, discord_id FROM players ORDER BY name').all();
-        fireSeasonStartNotification(env, updated, players.results || [])
-            .catch(e => console.error('Season start Discord notification failed:', e));
+        const playersRes = await env.DB.prepare('SELECT name, discord_id FROM players WHERE discord_id IS NOT NULL').all();
+        
+        if (becameActive) {
+            await fireSeasonStartNotification(env, updated, playersRes.results || [])
+                .catch(e => console.error('Season start notification failed:', e));
+        } else {
+            await fireAdminLog(env, `🔄 **Season Challenges Updated**: The challenge list for **${updated.name}** has been updated! Check the portal for details.`)
+                .catch(e => console.error('Challenge update log failed:', e));
+        }
     }
 
     return json({ success: true });
@@ -611,7 +683,7 @@ async function handleDiscordWebhook(request, env) {
     const body = await request.json().catch(() => null);
     if (!body) return err('Invalid JSON body');
 
-    await fireDiscordWebhook(env, body);
+    await fireAdminLog(env, body.message || 'Manual webhook trigger');
     return json({ success: true });
 }
 
@@ -656,7 +728,11 @@ async function postToDiscord(env, payload) {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
     });
-    if (!res.ok) console.error('Discord responded', res.status, await res.text());
+    if (!res.ok) {
+        const text = await res.text();
+        console.error(`Discord Error [${res.status}]:`, text);
+        throw new Error(`Discord responded with ${res.status}: ${text}`);
+    }
 }
 
 /* --- ACHIEVEMENT NOTIFICATION --- */
@@ -830,18 +906,41 @@ async function handleDiscordTest(env) {
 
 async function handleDiscordWelcome(env) {
     const season = await env.DB.prepare('SELECT * FROM seasons WHERE status = "active" LIMIT 1').first();
+    const portalUrl = 'https://d4-discord-challenge.pages.dev';
 
     const embed = {
-        title: '🎉 Welcome to the Hall of Legends!',
-        description: 'The definitive platform for tracking our Diablo IV conquests and competitive seasonal achievements.',
+        title: '🔥 Welcome to the Hall of Legends!',
+        description: 'The definitive competitive platform for tracking our Clan\'s Diablo IV conquests and legendary seasonal achievements.',
         color: 0xc9a84c,
+        thumbnail: { url: 'https://images.blzstatic.com/diablo4/logo-icon.png' },
         fields: [
-            { name: '🌐 Access the Portal', value: 'https://diablo4-hof-site.pages.dev', inline: false },
-            { name: '🎯 How it Works', value: 'Record your rare drops and achievements. Compete for the top spot on the seasonal and all-time leaderboards!', inline: false },
-            { name: '⚔️ Current Season', value: season ? `**${season.name}** is currently active!` : 'No active season at the moment.', inline: true },
-            { name: '📦 Features', value: '• Bingo Board\n• Live Leaderboards\n• Achievement History\n• Discord Sync', inline: true }
+            { 
+                name: '🌐 The Portal', 
+                value: `[**Enter the Hall of Legends**](${portalUrl})\n*Track standings, view the Bingo board, and browse the history of our mightiest champions.*`, 
+                inline: false 
+            },
+            { 
+                name: '🎯 How it Works', 
+                value: 'Our competition is simple: **Conquer the darkness and record your spoils.**\n\n1. Find rare Ancestral, Unique, or Mythic items.\n2. Record your feat via the Portal.\n3. Gain **Glory Points** to climb the Seasonal and All-Time leaderboards.', 
+                inline: false 
+            },
+            { 
+                name: '🪙 Point System', 
+                value: '• **1 Point**: Legendaries, Uniques, 2GA Items.\n• **2 Points**: 3GA Items, Mythic Items (No Cache).\n• **3 Points**: 4GA Items, Mythic Items (with GA).', 
+                inline: true 
+            },
+            { 
+                name: '⚔️ Current Status', 
+                value: season ? `**Season ${season.number}: ${season.name}** is currently **ACTIVE**!` : 'We are currently between seasons. Prepare for the next grind!', 
+                inline: true 
+            },
+            { 
+                name: '📦 Portal Features', 
+                value: '• **Bingo Board**: First to claim a slot wins it for the season!\n• **Live Leaderboards**: Real-time ranking of our clan members.\n• **Achievement Gallery**: A permanent record of every legendary drop.', 
+                inline: false 
+            }
         ],
-        footer: { text: 'Diablo IV — Built for the Grind' },
+        footer: { text: 'Diablo IV — Hall of Legends • Built for the Eternal Grind' },
         timestamp: new Date().toISOString()
     };
 
@@ -903,4 +1002,109 @@ async function fireAdminLog(env, message) {
         timestamp: new Date().toISOString()
     };
     await postToDiscord(env, { username: 'Admin Bot', embeds: [embed] });
+}
+// ════════════════════════════════════════════════════════════════
+// DISCORD AUTH & JWT HELPERS
+// ════════════════════════════════════════════════════════════════
+
+async function handleAuthLogin(env, origin) {
+    if (!env.DISCORD_CLIENT_ID) return err('Discord Auth not configured on server', 500);
+    
+    const params = new URLSearchParams({
+        client_id: env.DISCORD_CLIENT_ID,
+        redirect_uri: `${origin}/api/auth/callback`,
+        response_type: 'code',
+        scope: 'identify',
+    });
+    
+    return Response.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`, 302);
+}
+
+async function handleAuthCallback(request, env, origin) {
+    const url = new URL(request.url);
+    const code = url.searchParams.get('code');
+    if (!code) return err('No code provided', 400);
+
+    // 1. Exchange code for token
+    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+        method: 'POST',
+        body: new URLSearchParams({
+            client_id: env.DISCORD_CLIENT_ID,
+            client_secret: env.DISCORD_CLIENT_SECRET,
+            grant_type: 'authorization_code',
+            code,
+            redirect_uri: `${origin}/api/auth/callback`,
+        }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    if (!tokenRes.ok) return err('Failed to exchange token', 400);
+    const tokenData = await tokenRes.json();
+
+    // 2. Get User Info
+    const userRes = await fetch('https://discord.com/api/users/@me', {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    });
+    if (!userRes.ok) return err('Failed to fetch user info', 400);
+    const discordUser = await userRes.json();
+
+    // 3. Upsert Player in DB
+    let player = await env.DB.prepare('SELECT * FROM players WHERE discord_id = ?').bind(discordUser.id).first();
+    
+    if (!player) {
+        // Create new player or match by name? For now, create new.
+        const res = await env.DB.prepare('INSERT INTO players (name, discord_id, avatar) VALUES (?, ?, ?)')
+            .bind(discordUser.username, discordUser.id, discordUser.avatar).run();
+        player = { id: res.meta.last_row_id, name: discordUser.username, discord_id: discordUser.id };
+    } else {
+        // Update avatar if changed
+        await env.DB.prepare('UPDATE players SET avatar = ? WHERE id = ?').bind(discordUser.avatar, player.id).run();
+    }
+
+    // 4. Generate JWT
+    const jwt = await generateJWT({ id: player.id, name: player.name, discord_id: player.discord_id }, env.JWT_SECRET);
+
+    // Redirect back to main site with token in URL (fragment is safer)
+    return Response.redirect(`${origin}/#token=${jwt}`, 302);
+}
+
+// ── JWT UTILS (Web Crypto) ──────────────────────────────────────
+async function generateJWT(payload, secret) {
+    const header = { alg: 'HS256', typ: 'JWT' };
+    const encodedHeader = btoa(JSON.stringify(header));
+    const encodedPayload = btoa(JSON.stringify({ ...payload, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) })); // 1 week
+    
+    const key = await crypto.subtle.importKey(
+        'raw', new TextEncoder().encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false, ['sign']
+    );
+    
+    const signature = await crypto.subtle.sign(
+        'HMAC', key,
+        new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`)
+    );
+    
+    const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        
+    return `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
+}
+
+async function verifyJWT(token, secret) {
+    const [header, payload, signature] = token.split('.');
+    const key = await crypto.subtle.importKey(
+        'raw', new TextEncoder().encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false, ['verify']
+    );
+    
+    const sigArray = new Uint8Array(atob(signature.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0)));
+    const isValid = await crypto.subtle.verify(
+        'HMAC', key, sigArray,
+        new TextEncoder().encode(`${header}.${payload}`)
+    );
+    
+    if (!isValid) throw new Error('Invalid token');
+    return JSON.parse(atob(payload));
 }

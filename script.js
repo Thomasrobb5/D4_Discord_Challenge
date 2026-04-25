@@ -20,6 +20,8 @@ const appState = {
     achievements:  [],
     seasons:       [],
     isAdmin:       false,
+    user:          null, // Logged in Discord user
+    token:         localStorage.getItem('d4hol_token') || null,
 };
 
 // ── ACHIEVEMENT TEMPLATES ────────────────────────────────────────
@@ -252,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSeasonCards();
     setupCountdown();
     setupGlobalListeners();
+    setupAuth();
 
     // Background API upgrade
     initDataFromAPI().then(() => {
@@ -273,7 +276,13 @@ async function initDataFromAPI() {
     try {
         const ctrl  = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 5000);
-        const res   = await fetch(`${API_URL}/data`, { signal: ctrl.signal });
+        const headers = {};
+        if (appState.token) headers['Authorization'] = `Bearer ${appState.token}`;
+
+        const res = await fetch(`${API_URL}/data`, { 
+            signal: ctrl.signal,
+            headers
+        });
         clearTimeout(timer);
 
         if (res.ok) {
@@ -281,6 +290,9 @@ async function initDataFromAPI() {
             if (data.players)      appState.players      = data.players;
             if (data.achievements) appState.achievements = data.achievements;
             if (data.seasons)      appState.seasons      = data.seasons;
+            if (data.user)         appState.user         = data.user;
+            
+            renderUserProfile();
             console.info('✅ Live data loaded from Cloudflare Worker.');
             renderTicker();
         }
@@ -1292,3 +1304,70 @@ function renderGlobalLeaderboard() {
     }
 }
 
+/* ─── Auth Logic ────────────────────────────────────────── */
+function setupAuth() {
+    // Check for token in URL fragment (from redirect)
+    if (window.location.hash.includes('token=')) {
+        const token = window.location.hash.split('token=')[1]?.split('&')[0];
+        if (token) {
+            appState.token = token;
+            localStorage.setItem('d4hol_token', token);
+            // Clear hash without reloading
+            history.replaceState(null, null, ' ');
+        }
+    }
+
+    const loginBtn = getEl('discordLoginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            window.location.href = `${API_URL}/auth/login`;
+        });
+    }
+}
+
+function renderUserProfile() {
+    const container = getEl('userProfileSection');
+    if (!container) return;
+
+    if (!appState.user) {
+        container.innerHTML = `
+            <button class="btn-discord-login" id="discordLoginBtn">
+                <span class="discord-icon"></span> Sign In
+            </button>
+        `;
+        getEl('discordLoginBtn')?.addEventListener('click', () => {
+            window.location.href = `${API_URL}/auth/login`;
+        });
+        return;
+    }
+
+    const u = appState.user;
+    // Discord avatar URL format: https://cdn.discordapp.com/avatars/{user_id}/{avatar_hash}.png
+    const avatarUrl = u.avatar 
+        ? `https://cdn.discordapp.com/avatars/${u.discord_id}/${u.avatar}.png`
+        : `https://cdn.discordapp.com/embed/avatars/${parseInt(u.discord_id) % 5}.png`;
+
+    container.innerHTML = `
+        <div class="logged-in-user" id="userMenuBtn">
+            <img src="${avatarUrl}" class="user-avatar" alt="Avatar">
+            <div class="user-info">
+                <span class="user-name">${escHtml(u.name)}</span>
+                <span class="user-tag">Profile ☩</span>
+            </div>
+        </div>
+    `;
+
+    getEl('userMenuBtn')?.addEventListener('click', () => {
+        if (confirm('Do you want to log out?')) {
+            logout();
+        }
+    });
+}
+
+function logout() {
+    appState.token = null;
+    appState.user = null;
+    localStorage.removeItem('d4hol_token');
+    renderUserProfile();
+    initDataFromAPI(); // Refresh data to clear personal state
+}
