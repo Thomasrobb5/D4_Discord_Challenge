@@ -732,12 +732,15 @@ async function fireAchievementNotification(env, data) {
         ? new Date(timestamp).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
         : 'Just now';
 
-    // @mention if we have a discord_id, otherwise bold name
-    const mention = discordId ? `<@${discordId}>` : `**${playerName}**`;
+    // Fetch ALL players with discord_id to mention them
+    const playersRes = await env.DB.prepare('SELECT discord_id FROM players WHERE discord_id IS NOT NULL').all();
+    const allMentions = (playersRes.results || []).map(p => `<@${p.discord_id}>`).join(' ');
+
+    const claimerMention = discordId ? `<@${discordId}>` : `**${playerName}**`;
 
     const embed = {
         title:       `${icon} Achievement Unlocked — ${achName}`,
-        description: `${mention} has claimed a new achievement in **${seasonName || 'current season'}**! 🎉`,
+        description: `${claimerMention} has claimed a new achievement in **${seasonName || 'current season'}**! 🎉`,
         color,
         fields: [
             { name: 'Rarity',   value: rarityName,      inline: true },
@@ -750,7 +753,11 @@ async function fireAchievementNotification(env, data) {
     };
     if (notes) embed.fields.push({ name: 'Notes', value: notes, inline: false });
 
-    await postToDiscord(env, { username: 'Hall of Legends', embeds: [embed] });
+    await postToDiscord(env, { 
+        content: allMentions ? `📢 **New Conquest!** ${allMentions}` : null,
+        username: 'Hall of Legends', 
+        embeds: [embed] 
+    });
 }
 
 /* Legacy alias so the proxy route still works */
