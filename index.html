@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="styles.css">
     <!-- Thin top-of-page loading bar -->
     <style>
-    #pageLoader { position:fixed; top:0; left:0; width:100%; height:3px; z-index:9999;
+    #pageLoader { position:fixed; top:32px; left:0; width:100%; height:3px; z-index:9999;
         background:linear-gradient(90deg,var(--blood-red,#8b0000),var(--ember-gold,#c9a84c));
         animation:loaderSlide 1.4s ease-in-out infinite; pointer-events:none; }
     #pageLoader.done { animation:loaderFade 0.5s ease forwards; }
@@ -29,6 +29,16 @@
     </style>
 </head>
 <body>
+    <!-- Global Top Bar -->
+    <div class="top-bar">
+        <div class="top-bar-inner">
+            <a href="https://d4-lootfinder.pages.dev/" target="_blank" class="top-bar-link">
+                <span class="link-icon">⚔</span>
+                <span class="link-text">D4 Loot Finder</span>
+            </a>
+        </div>
+    </div>
+
     <!-- Top loading bar -->
     <div id="pageLoader"></div>
 
